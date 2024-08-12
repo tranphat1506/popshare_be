@@ -55,14 +55,14 @@ class Config {
                 // Thiết lập ghi các errors vào file
                 new winston.transports.DailyRotateFile({
                     level: 'error',
-                    filename: path.join(__dirname + '/logs/error/', '%DATE%_errors.log'),
+                    filename: path.join('./logs/error/', '%DATE%_errors.log'),
                     datePattern: 'YYYY-MM-DD',
                     maxFiles: '14d',
                 }),
                 // Thiết lập ghi các info vào file
                 new winston.transports.DailyRotateFile({
                     level: 'info',
-                    filename: path.join(__dirname + '/logs/info/', '%DATE%_info.log'),
+                    filename: path.join('./logs/info/', '%DATE%_info.log'),
                     datePattern: 'YYYY-MM-DD',
                     maxFiles: '14d',
                 }),
