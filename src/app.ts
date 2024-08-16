@@ -1,17 +1,21 @@
 import express, { Express } from 'express';
-import { config } from '@root/config';
-import { Logger } from 'winston';
+import { config, LoggerBase } from '@root/config';
 import { PopShareServer } from '@root/setupServer';
-const SPEAKER = 'app';
-const log: Logger = config.createLogger(SPEAKER);
+import setupDatabase from './setupDatabase';
+import { Logger } from 'winston';
 
+const log: Logger = config.createLogger('Application');
 class Application {
     public initialize(): void {
         this.loadConfig();
+        this.connectDatabase();
         const app: Express = express();
         const server: PopShareServer = new PopShareServer(app);
         server.start();
         Application.handleExit();
+    }
+    private connectDatabase(): void {
+        setupDatabase();
     }
 
     private loadConfig(): void {
