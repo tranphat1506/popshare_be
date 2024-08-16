@@ -1,5 +1,6 @@
 import express, { Router } from 'express';
 import { GetUserController } from '../controllers/get.users';
+import { authMiddleware } from '@root/middlewares/auth.middleware';
 
 class UserRoutes {
     private router: Router;
@@ -9,6 +10,7 @@ class UserRoutes {
 
     public routes(): Router {
         this.router.get('/user', GetUserController.prototype.all);
+        this.router.get('/me', authMiddleware.verifyUser, GetUserController.prototype.me);
         return this.router;
     }
 }
