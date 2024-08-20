@@ -30,3 +30,7 @@ export interface INotificationDocument extends Document {
     otherContents: any;
     createdAt: number;
 }
+
+export interface INotiJob {
+    value?: string | INotificationDocument;
+}
