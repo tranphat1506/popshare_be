@@ -9,8 +9,8 @@ class UserRoutes {
     }
 
     public routes(): Router {
-        this.router.get('/user', GetUserController.prototype.all);
-        this.router.get('/me', authMiddleware.verifyUser, GetUserController.prototype.me);
+        this.router.post('/user', GetUserController.prototype.all);
+        this.router.post('/me', authMiddleware.verifyUser, GetUserController.prototype.me);
         return this.router;
     }
 }

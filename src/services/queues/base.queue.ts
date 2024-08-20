@@ -6,7 +6,9 @@ import { config, LoggerBase } from '@root/config';
 import { IAuthJob } from '@root/features/auth/interfaces/auth.interfaces';
 import { IUserJob } from '@root/features/users/interfaces/user.interface';
 import { IFriendJob } from '@root/features/friends/interfaces/friend.interface';
-type IBaseJobData = IAuthJob | IUserJob | IFriendJob;
+import { IRoomJob } from '@root/features/rooms/interfaces/room.interface';
+import { INotiJob } from '@root/features/notifications/interfaces/notifications.interface';
+type IBaseJobData = IAuthJob | IUserJob | IFriendJob | IRoomJob | INotiJob;
 let bullAdapters: BullAdapter[] = [];
 export let serverAdapter: ExpressAdapter;
 

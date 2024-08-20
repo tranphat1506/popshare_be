@@ -1,19 +1,25 @@
 import { BadRequestError } from '@root/helpers/error-handler';
 import { friendQueue } from '@root/services/queues/friend.queue';
 import { NextFunction, Request, Response } from 'express';
-import { Types } from 'mongoose';
+import { isValidObjectId, Types } from 'mongoose';
 import { IFriendDocument, IUpdateFriendRequest } from '../interfaces/friend.interface';
 import { friendCache } from '@root/services/redis/friend.cache';
 import { friendService } from '@root/services/db/friend.services';
 import HTTP_STATUS from 'http-status-codes';
+import { IRoomDocument } from '@root/features/rooms/interfaces/room.interface';
+import { roomCache } from '@root/services/redis/room.cache';
+import { roomQueue } from '@root/services/queues/room.queue';
+import { INotificationDocument } from '@root/features/notifications/interfaces/notifications.interface';
+import { notiQueue } from '@root/services/queues/notification.queue';
+import { socketIONotification } from '@root/services/sockets/notification.socket';
+import { CommonSocketServerService } from '@root/services/sockets/commonServices.socket';
 export class FriendMethodController {
     public async addFriendMethod(req: Request, res: Response, next: NextFunction) {
         const { userId } = req.body;
         try {
-            if (!userId) {
+            if (!userId || userId === req.currentUser?.userId || !isValidObjectId(userId)) {
                 throw new BadRequestError('Invalid or not found this user.');
             }
-
             const friendRequestCached = await friendCache.getFriendRequestFromCache(
                 `${req.currentUser!.userId}`,
                 userId,
@@ -25,17 +31,43 @@ export class FriendMethodController {
             if (friendRequest === null) {
                 const newRequest = {
                     _id: new Types.ObjectId(),
-                    senderId: `${req.currentUser!.userId}`,
-                    reciverId: userId,
+                    senderId: new Types.ObjectId(`${req.currentUser!.userId}`),
+                    receiverId: new Types.ObjectId(`${userId}`),
                     status: 'pending',
                     requestTime: Date.now(),
                 } as IFriendDocument;
+                const newNoti = {
+                    _id: new Types.ObjectId(),
+                    sender: {
+                        entityType: 'user',
+                        userId: new Types.ObjectId(`${req.currentUser!.userId}`),
+                    },
+                    receiver: {
+                        entityType: 'user',
+                        userId: new Types.ObjectId(`${userId}`),
+                    },
+                    notificationType: 'friend_request',
+                    notificationMessages: ['%SENDER% has sent %RECEIVER% a friend request'],
+                    notificationReaders: [
+                        {
+                            entityType: 'user',
+                            userId: new Types.ObjectId(`${req.currentUser!.userId}`),
+                        },
+                    ],
+                    createdAt: Date.now(),
+                } as INotificationDocument;
                 // add to redis
                 await friendCache.addFriendRequestToCache(newRequest);
+
                 // add to db
                 friendQueue.createFriendRequest('createFriendRequest', {
                     value: newRequest,
                 });
+                notiQueue.addNotiToDB({ value: newNoti });
+
+                // socket
+                CommonSocketServerService.sendNotificationToEntity(newNoti);
+
                 return res
                     .status(HTTP_STATUS.OK)
                     .json({ message: 'Successfully send add friend request to this user.', friendRequest: newRequest });
@@ -45,6 +77,9 @@ export class FriendMethodController {
                     // add to redis if cached dont have
                     await friendCache.addFriendRequestToCache(friendRequest);
                 }
+                // socket
+
+                // response
                 return res.status(HTTP_STATUS.OK).json({
                     message: 'Successfully send add friend request to this user.',
                     friendRequest: friendRequest,
@@ -63,7 +98,29 @@ export class FriendMethodController {
                     // else save to cached
                     await friendCache.addFriendRequestToCache(newRequest);
                 }
-
+                const newRoom = {
+                    _id: new Types.ObjectId(),
+                    roomType: 'p2p',
+                    createdAt: Date.now(),
+                    createdBy: new Types.ObjectId(`${req.currentUser!.userId}`),
+                    roomMembers: {
+                        member: 2,
+                        list: [
+                            {
+                                memberId: new Types.ObjectId(`${req.currentUser!.userId}`),
+                                position: 'owner',
+                                permissionScore: 9999,
+                            },
+                            {
+                                memberId: new Types.ObjectId(`${userId}`),
+                                position: 'owner',
+                                permissionScore: 9999,
+                            },
+                        ],
+                    },
+                } as IRoomDocument;
+                await roomCache.addRoomToCache(newRoom);
+                roomQueue.addRoomJob({ value: newRoom });
                 friendQueue.updateFriendRequest({
                     key1: `${req.currentUser!.userId}`,
                     key2: `${userId}`,

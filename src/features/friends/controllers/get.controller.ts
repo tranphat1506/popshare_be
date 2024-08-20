@@ -2,17 +2,23 @@ import { BadRequestError, NotAuthorizedError } from '@root/helpers/error-handler
 import { friendService } from '@root/services/db/friend.services';
 import { NextFunction, Request, Response } from 'express';
 import HTTP_STATUS from 'http-status-codes';
-import { IFriendsResponseData, RequestStatusTypes } from '../interfaces/friend.interface';
+import { IFriendDocument, IFriendsResponseData, RequestStatusTypes } from '../interfaces/friend.interface';
+import { friendCache } from '@root/services/redis/friend.cache';
 
 export class GetFriendController {
     public async all(req: Request, res: Response, next: NextFunction) {
         try {
-            const { userId } = req.currentUser ?? {};
+            const { userId } = req.currentUser!;
             if (!userId) {
                 throw new NotAuthorizedError('Invalid credentials.');
             }
-            const friendList = await friendService.getAllFriendRequestByUserId(userId as string);
-
+            const friendCachedList = (await friendCache.getAllFriendsByUserId(`${userId}`, true)) as IFriendDocument[];
+            const friendList: IFriendsResponseData = !friendCachedList
+                ? await friendService.getAllFriendRequestByUserId(`${userId}`)
+                : {
+                      count: friendCachedList.length,
+                      friends: friendCachedList,
+                  };
             res.status(HTTP_STATUS.OK).json({
                 message: 'Get friendlist successfully',
                 friendList,
@@ -28,13 +34,26 @@ export class GetFriendController {
             if (!userId) {
                 throw new NotAuthorizedError('Invalid credentials.');
             }
+            let friendCachedList = (await friendCache.getAllFriendsByUserId(`${userId}`, true)) as IFriendDocument[];
             let friendList: IFriendsResponseData;
             switch (status as RequestStatusTypes) {
                 case 'accepted':
-                    friendList = await friendService.getAllAcceptedFriendsByUserId(userId as string);
+                    if (friendCachedList) {
+                        friendCachedList = friendCachedList.filter((f) => f.status === 'accepted');
+                        friendList = {
+                            count: friendCachedList.length,
+                            friends: friendCachedList,
+                        };
+                    } else friendList = await friendService.getAllAcceptedFriendsByUserId(userId as string);
                     break;
                 case 'pending':
-                    friendList = await friendService.getAllPendingFriendsByUserId(userId as string);
+                    if (friendCachedList) {
+                        friendCachedList = friendCachedList.filter((f) => f.status === 'pending');
+                        friendList = {
+                            count: friendCachedList.length,
+                            friends: friendCachedList,
+                        };
+                    } else friendList = await friendService.getAllPendingFriendsByUserId(userId as string);
                     break;
                 default:
                     throw new BadRequestError('Invalid status');

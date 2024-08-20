@@ -1,5 +1,4 @@
 import { BaseQueue } from './base.queue';
-import { authWorker } from '../worker/auth.worker';
 import { IUserJob } from '@root/features/users/interfaces/user.interface';
 import { userWorker } from '../worker/user.worker';
 
