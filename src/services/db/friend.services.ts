@@ -10,9 +10,9 @@ class FriendServices {
         const friends = await FriendModel.find({
             $or: [
                 {
-                    reciverId: userId,
-                    senderId: userId,
+                    receiverId: userId,
                 },
+                { senderId: userId },
             ],
         });
         return { count: friends.length, friends };
@@ -21,9 +21,9 @@ class FriendServices {
         const friends = await FriendModel.find({
             $or: [
                 {
-                    reciverId: userId,
-                    senderId: userId,
+                    receiverId: userId,
                 },
+                { senderId: userId },
             ],
             status: 'accepted',
         });
@@ -34,25 +34,25 @@ class FriendServices {
         const friends = await FriendModel.find({
             $or: [
                 {
-                    reciverId: userId,
-                    senderId: userId,
+                    receiverId: userId,
                 },
+                { senderId: userId },
             ],
             status: 'pending',
         });
         return { count: friends.length, friends };
     }
 
-    public async addFriend(senderId: string, reciverId: string): Promise<null | IFriendDocument> {
-        const friendRequest = await this.getFriendRequestBetweenTwo(senderId, reciverId);
+    public async addFriend(senderId: string, receiverId: string): Promise<null | IFriendDocument> {
+        const friendRequest = await this.getFriendRequestBetweenTwo(senderId, receiverId);
         if (friendRequest === null) {
             return await FriendModel.create({
-                reciverId: reciverId,
+                receiverId: receiverId,
                 senderId: senderId,
                 status: 'pending',
             });
         }
-        if (friendRequest.status === 'pending' && friendRequest.senderId.toString() === reciverId) {
+        if (friendRequest.status === 'pending' && friendRequest.senderId.toString() === receiverId) {
             friendRequest.status = 'accepted';
             return await friendRequest.save();
         }
@@ -64,11 +64,11 @@ class FriendServices {
             $or: [
                 {
                     senderId: user1Id,
-                    reciverId: user2Id,
+                    receiverId: user2Id,
                 },
                 {
                     senderId: user2Id,
-                    reciverId: user1Id,
+                    receiverId: user1Id,
                 },
             ],
         }));
@@ -80,7 +80,7 @@ class FriendServices {
 
     public async updateFriendRequest(
         senderId: string,
-        reciverId: string,
+        receiverId: string,
         updates: IUpdateFriendRequest,
     ): Promise<IFriendDocument | null> {
         return await FriendModel.findOneAndUpdate(
@@ -88,11 +88,11 @@ class FriendServices {
                 $or: [
                     {
                         senderId: senderId,
-                        reciverId: reciverId,
+                        receiverId: receiverId,
                     },
                     {
-                        senderId: reciverId,
-                        reciverId: senderId,
+                        senderId: receiverId,
+                        receiverId: senderId,
                     },
                 ],
             },
@@ -105,11 +105,11 @@ class FriendServices {
         return await FriendModel.findOne({
             $or: [
                 {
-                    reciverId: user1Id,
+                    receiverId: user1Id,
                     senderId: user2Id,
                 },
                 {
-                    reciverId: user2Id,
+                    receiverId: user2Id,
                     senderId: user1Id,
                 },
             ],

@@ -1,7 +1,21 @@
 import { Document, Types } from 'mongoose';
 
 export interface IFriendDocument extends Document {
-    reciverId: string | Types.ObjectId;
+    receiverInfo?: {
+        username: string;
+        displayName: string;
+        avatarEmoji: string;
+        profilePicture: string;
+        avatarColor: string;
+    };
+    senderInfo?: {
+        username: string;
+        displayName: string;
+        avatarEmoji: string;
+        profilePicture: string;
+        avatarColor: string;
+    };
+    receiverId: string | Types.ObjectId;
     senderId: string | Types.ObjectId;
     requestTime: number;
     responseTime?: number;

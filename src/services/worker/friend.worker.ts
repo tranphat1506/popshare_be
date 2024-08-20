@@ -7,7 +7,7 @@ import { IFriendDocument } from '@root/features/friends/interfaces/friend.interf
 
 class FriendWorker extends LoggerBase {
     constructor() {
-        super('userWorker');
+        super('friendWorker');
     }
     async updateFriendRequest(job: Job, done: DoneCallback): Promise<void> {
         try {

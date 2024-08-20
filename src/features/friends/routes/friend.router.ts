@@ -10,7 +10,7 @@ class FriendRoutes {
 
     public routes(): Router {
         this.router.post('/all', GetFriendController.prototype.all);
-        this.router.post('/:status', GetFriendController.prototype.byStatusFilter);
+        this.router.post('/filter/:status', GetFriendController.prototype.byStatusFilter);
         this.router.post('/add', FriendMethodController.prototype.addFriendMethod);
         this.router.post('/un', FriendMethodController.prototype.unFriendMethod);
 
@@ -18,4 +18,4 @@ class FriendRoutes {
     }
 }
 
-export const userRoutes: FriendRoutes = new FriendRoutes();
+export const friendRoutes: FriendRoutes = new FriendRoutes();
