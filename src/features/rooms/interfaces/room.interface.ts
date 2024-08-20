@@ -11,7 +11,7 @@ export interface IMemberDetail {
     position: MemberPositionTypes;
     permissionScore: number;
     joinedAt: number;
-    displayName: string;
+    displayName?: string;
     notificationSettings: INotificationSettings;
 }
 
@@ -26,12 +26,20 @@ interface IMessageSettings {
 }
 export interface IRoomDocument extends Document {
     _id: Types.ObjectId | string; // room id
-    roomName: string;
+    roomName?: string;
     roomBannedList: IMembersList; // MembersList chứa danh sách cấm
     roomMembers: IMembersList; // MembersList chứa danh sách thành viên
     createdBy: Types.ObjectId | string;
     createdAt: number;
     messageSettings: IMessageSettings;
+    roomType: RoomTypeTypes;
 }
 type MemberPositionTypes = 'owner' | 'member' | 'other';
 export const MemberPositionEnum: MemberPositionTypes[] = ['member', 'other', 'owner'];
+
+type RoomTypeTypes = 'cloud' | 'group' | 'p2p';
+export const RoomTypeEnum: RoomTypeTypes[] = ['cloud', 'group', 'p2p'];
+
+export interface IRoomJob {
+    value?: IRoomDocument | string;
+}

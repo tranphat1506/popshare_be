@@ -1,5 +1,5 @@
 import { model, Model, Schema, Types } from 'mongoose';
-import { IRoomDocument, MemberPositionEnum } from '../interfaces/room.interface';
+import { IRoomDocument, MemberPositionEnum, RoomTypeEnum } from '../interfaces/room.interface';
 
 const MemberDetailSchema = new Schema({
     memberId: { type: Types.ObjectId, ref: 'User', index: true },
@@ -20,6 +20,7 @@ const RoomSchema = new Schema({
     roomName: String,
     roomBannedList: MembersListSchema,
     roomMembers: MembersListSchema,
+    roomType: { type: String, enum: RoomTypeEnum, default: 'p2p' },
     createdBy: { type: Types.ObjectId, ref: 'User', index: true },
     createdAt: { type: Number, default: Date.now() },
     messageSettings: {

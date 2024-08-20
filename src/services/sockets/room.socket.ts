@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { BaseSocket } from './base.socket';
 
 export let socketIORoom: Server;
-class RoomSocket extends BaseSocket {
+export class RoomSocket extends BaseSocket {
     constructor(io: Server) {
         super(io, 'RoomSocket');
         socketIORoom = io;
