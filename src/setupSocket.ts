@@ -1,7 +1,6 @@
 import http from 'http';
 import { Server } from 'socket.io';
 import { config, LoggerBase } from './config';
-import { Redis } from 'ioredis';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { NotificationSocket } from './services/sockets/notification.socket';
 import { UserSocket } from './services/sockets/user.socket';

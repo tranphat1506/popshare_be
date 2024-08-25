@@ -62,16 +62,55 @@ class UserCache extends BaseCache {
         }
     }
 
-    public async addUserToOnlineState(user: IUserDocument, socketId: string): Promise<void> {
+    public async addUserToOnlineState(userId: string): Promise<IOnlineState> {
         try {
             const onl = {
-                ...user.toObject(),
-                userId: user._id.toString(),
-                socketId,
+                userId: userId,
                 isOnline: true,
                 lastTimeActive: Date.now(),
             } as IOnlineState;
-            await this.client.hset(`online:${onl.userId}`, `${socketId}`, JSON.stringify(onl));
+            await this.client.hset(`online`, `${userId}`, JSON.stringify(onl));
+            return onl;
+        } catch (error) {
+            this.log.error(error);
+            throw new ServerError('Server error. Try again.');
+        }
+    }
+    public async updateUserOnlineState(userId: string, status: boolean) {
+        try {
+            const onl = {
+                userId: userId,
+                isOnline: status,
+                lastTimeActive: Date.now(),
+            } as IOnlineState;
+            await this.client.hset(`online`, `${userId}`, JSON.stringify(onl));
+            return onl;
+        } catch (error) {
+            this.log.error(error);
+            throw new ServerError('Server error. Try again.');
+        }
+    }
+    public async getUserOnlineState(userId: string) {
+        try {
+            const stringData = await this.client.hget(`online`, `${userId}`);
+            if (!stringData) return null;
+            return JSON.parse(stringData) as IOnlineState;
+        } catch (error) {
+            this.log.error(error);
+            throw new ServerError('Server error. Try again.');
+        }
+    }
+    public async getUserOnlineStateByListOfUserId(userList: (string | null)[]) {
+        try {
+            const onlineList: { [key: string]: IOnlineState | null } = {};
+            await Promise.all(
+                userList.map(async (userId) => {
+                    if (!userId) return null;
+                    const os = await this.getUserOnlineState(userId);
+                    onlineList[userId] = os;
+                }),
+            );
+            return onlineList;
         } catch (error) {
             this.log.error(error);
             throw new ServerError('Server error. Try again.');

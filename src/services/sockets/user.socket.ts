@@ -1,5 +1,4 @@
 import { Socket, Server } from 'socket.io';
-import { ISocketLogin } from './socket.interfaces';
 import { BaseSocket } from './base.socket';
 
 export let socketIOUser: Server;
@@ -10,19 +9,7 @@ export class UserSocket extends BaseSocket {
     }
 
     public listen(): void {
-        this.io.on('connection', (socket: Socket) => {
-            socket.on('online', async (data: ISocketLogin) => {
-                const { userId } = data;
-                try {
-                    const getRooms = null; //;
-                    // push me to friends room
-                    // get current friend online in my room
-                    // notifications i am online
-                } catch (error) {
-                    this.catchError(error, socket);
-                }
-            });
-
+        socketIOUser.on('connection', (socket: Socket) => {
             socket.on('disconnect', () => {});
         });
     }

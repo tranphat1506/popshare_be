@@ -9,8 +9,10 @@ export interface IErrorResponse {
 
 export interface IError {
     message: string;
-    statusCode: number;
-    status: string;
+    statusCode?: number;
+    status?: string;
+    payload?: any;
+    event?: string;
 }
 
 export abstract class CustomError extends Error {
@@ -63,6 +65,25 @@ export class NotAuthorizedError extends CustomError {
 
     constructor(message: string) {
         super(message);
+    }
+}
+
+export class SocketEventError extends Error {
+    public event: string;
+    public payload: any;
+
+    constructor(event: string, message: string, payload: any) {
+        super(message);
+        this.event = event;
+        this.payload = payload;
+    }
+
+    serializeErrors(): IError {
+        return {
+            message: this.message,
+            payload: this.payload,
+            event: this.event,
+        };
     }
 }
 

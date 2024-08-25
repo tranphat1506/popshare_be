@@ -4,6 +4,7 @@ import { config } from '@root/config';
 import { NotAuthorizedError } from '@root/helpers/error-handler';
 import { AuthPayload } from '@auth/interfaces/auth.interfaces';
 import { Socket } from 'socket.io';
+import { ExtendedError } from 'socket.io/dist/namespace';
 export class AuthMiddleware {
     public async verifyUser(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
@@ -26,14 +27,15 @@ export class AuthMiddleware {
         next();
     }
 
-    public async verifyUserSocketIO(socket: Socket, next: NextFunction) {
+    public async verifyUserSocketIO(socket: Socket, next: (err?: any) => void) {
         try {
-            if (socket.handshake && socket.handshake.auth) {
-                const token = socket.handshake.auth.split(' ')[1] as string;
-                const payload = await verifyToken(token, config.JWT_ACCESS_TOKEN_SECRET);
-                socket.user = { userId: payload.userId.toString() };
-                next();
+            if (!socket.handshake.headers.authorization) {
+                throw new NotAuthorizedError('Invalid credential');
             }
+            const token = socket.handshake.headers.authorization.split(' ')[1] as string;
+            const payload = await verifyToken(token, config.JWT_ACCESS_TOKEN_SECRET);
+            socket.user = { userId: payload.userId.toString() };
+            next();
         } catch (error) {
             next(error);
         }

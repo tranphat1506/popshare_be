@@ -1,7 +1,8 @@
 import { LoggerBase } from '@root/config';
-import { CustomError, ServerError } from '@root/helpers/error-handler';
+import { ServerError, SocketEventError } from '@root/helpers/error-handler';
 import { authMiddleware } from '@root/middlewares/auth.middleware';
-import { Server, Socket } from 'socket.io';
+import { Namespace, Server, Socket } from 'socket.io';
+import { SocketEventList } from './socketEvent.constant';
 
 export class BaseSocket extends LoggerBase {
     public io: Server;
@@ -12,15 +13,14 @@ export class BaseSocket extends LoggerBase {
     }
 
     public catchError(error: unknown, socket: Socket): void {
-        if (error instanceof CustomError) {
+        if (error instanceof SocketEventError) {
             if (error instanceof ServerError) this.log.error(error);
-            socket.emit('response_error_message', error.serializeErrors());
-        }
-        this.log.error(error);
+            socket.emit(SocketEventList.sendSocketRequestError, error.serializeErrors());
+        } else this.log.error(error);
     }
 
-    public usingAuthMiddleware(): void {
+    public usingAuthMiddleware(io: Namespace | Server): void {
         // auth middlewares
-        this.io.engine.use(authMiddleware.verifyUserSocketIO);
+        io.use(authMiddleware.verifyUserSocketIO);
     }
 }

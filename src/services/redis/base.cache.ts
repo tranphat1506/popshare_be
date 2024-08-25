@@ -1,38 +1,9 @@
 import { config, LoggerBase } from '@root/config';
 import Redis from 'ioredis';
-import { Logger } from 'winston';
 
 declare global {
     var _redisClient: Redis;
 }
-const log: Logger = config.createLogger('Redis');
-
-function cacheOnEventListener(client: Redis): void {
-    cacheConnect(client);
-    cacheError(client);
-    cacheClose(client);
-}
-
-function cacheConnect(client: Redis): void {
-    client.on('connect', async () => {
-        log.info(`Redis:::${_cacheStatus(client)}`);
-    });
-}
-function cacheError(client: Redis): void {
-    client.on('error', (error) => {
-        log.error(error);
-        process.exit(1);
-    });
-}
-function cacheClose(client: Redis): void {
-    client.on('close', () => {
-        log.info(`Redis:::${_cacheStatus(client)}`);
-    });
-}
-function _cacheStatus(client: Redis): string {
-    return client.status;
-}
-
 export abstract class BaseCache extends LoggerBase {
     client: Redis;
     constructor(cacheName: string) {
@@ -42,14 +13,39 @@ export abstract class BaseCache extends LoggerBase {
     }
     public async pingToRedis(client: Redis): Promise<void> {
         try {
-            log.info(`Redis:::${await client.ping()}`);
+            this.log.info(`Redis:::${await client.ping()}`);
         } catch (error) {
-            log.error(error);
+            this.log.error(error);
         }
+    }
+
+    public cacheOnEventListener(client: Redis): void {
+        this.cacheConnect(client);
+        this.cacheError(client);
+        this.cacheClose(client);
+    }
+
+    public cacheConnect(client: Redis): void {
+        client.on('connect', async () => {
+            this.log.info(`Redis:::${this._cacheStatus(client)}`);
+        });
+    }
+    public cacheError(client: Redis): void {
+        client.on('error', (error) => {
+            this.log.error(error);
+            process.exit(1);
+        });
+    }
+    public cacheClose(client: Redis): void {
+        client.on('close', () => {
+            this.log.info(`Redis:::${this._cacheStatus(client)}`);
+        });
+    }
+    public _cacheStatus(client: Redis): string {
+        return client.status;
     }
 }
 
 export let redisClient = new Redis(config.REDIS_URL, config.redisOptions());
-cacheOnEventListener(redisClient);
 // global the redis
 global._redisClient = redisClient;

@@ -1,18 +1,19 @@
 import { AuthPayload } from '@root/features/auth/interfaces/auth.interfaces';
-import { IUserDocument } from '@root/features/users/interfaces/user.interface';
 
-export interface IOnlineState extends IUserDocument {
+export interface IOnlineState {
     userId: string;
-    socketId: string;
     isOnline: boolean;
     lastTimeActive: number;
 }
 
-export interface ISocketLogin extends AuthPayload {
+export interface ISocketLogin {
     userId: string;
 }
 declare module 'socket.io' {
     interface Socket {
         user?: ISocketLogin;
     }
+}
+export interface ISocketSetup {
+    rooms: string[];
 }

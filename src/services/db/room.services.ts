@@ -10,7 +10,20 @@ class RoomServices {
     }
 
     public async getRoomByRoomId(roomId: Types.ObjectId | string): Promise<IRoomDocument | null> {
-        return await RoomModel.findById(roomId);
+        return await RoomModel.findById(new Types.ObjectId(roomId));
+    }
+
+    public async getRoomByRoomIdAndMemberId(userId: string, roomId: string): Promise<IRoomDocument | null> {
+        return await RoomModel.findOne({
+            _id: roomId,
+            'roomMembers.list': { $elemMatch: { memberId: new Types.ObjectId(userId) } },
+        });
+    }
+
+    public async getAllRoomByMemberId(userId: string): Promise<IRoomDocument[]> {
+        return await RoomModel.find({
+            'roomMembers.list': { $elemMatch: { memberId: new Types.ObjectId(userId) } },
+        });
     }
 
     public async getMessagesByPage(

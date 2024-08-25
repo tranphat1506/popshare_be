@@ -39,7 +39,9 @@ export const MemberPositionEnum: MemberPositionTypes[] = ['member', 'other', 'ow
 
 type RoomTypeTypes = 'cloud' | 'group' | 'p2p';
 export const RoomTypeEnum: RoomTypeTypes[] = ['cloud', 'group', 'p2p'];
-
+export interface ISocketChatRoomSetup {
+    roomIdList?: string[];
+}
 export interface IRoomJob {
     value?: IRoomDocument | string;
 }

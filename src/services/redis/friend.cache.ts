@@ -1,7 +1,6 @@
 import { IFriendDocument, IUpdateFriendRequest } from '@root/features/friends/interfaces/friend.interface';
 import { BaseCache } from './base.cache';
 import { BadRequestError, ServerError } from '@root/helpers/error-handler';
-import { userCache } from './user.cache';
 
 class FriendCache extends BaseCache {
     constructor() {

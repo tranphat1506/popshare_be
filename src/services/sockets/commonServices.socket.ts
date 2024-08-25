@@ -2,10 +2,7 @@ import { Socket } from 'socket.io';
 import { socketIONotification } from './notification.socket';
 import { IEntity, INotificationDocument } from '@root/features/notifications/interfaces/notifications.interface';
 import { ServerError } from '@root/helpers/error-handler';
-enum SocketEventList {
-    sendNotification = 'notiSent',
-    broadcastNotification = 'broadcast',
-}
+import { SocketEventList } from './socketEvent.constant';
 export class CommonSocketServerService {
     public static sendNotificationToEntity(noti: INotificationDocument, receiverEntity?: IEntity) {
         const receiver: IEntity = receiverEntity ?? noti.receiver;
@@ -25,10 +22,22 @@ export class CommonSocketServerService {
                 );
         }
     }
-    public static reJoinSocketNotificationRoom(socket: Socket, userId: string) {
-        socket.join(userId);
+    public static joinSocketNotificationRoom(socket: Socket, userId: string) {
+        this._joinSocketRoom(socket, userId);
     }
     public static broadcastToAllUsers(noti: INotificationDocument) {
         socketIONotification.emit(SocketEventList.broadcastNotification, noti);
+    }
+    public static joinSocketChatRoom(socket: Socket, roomId: string) {
+        this._joinSocketRoom(socket, roomId);
+    }
+    public static async joinSocketChatRooms(socket: Socket, roomList: string[]) {
+        for await (const roomId of roomList) {
+            console.log(`${socket.id} join ${roomId}`);
+            this._joinSocketRoom(socket, roomId);
+        }
+    }
+    private static _joinSocketRoom(socket: Socket, roomId: string) {
+        socket.join(roomId);
     }
 }

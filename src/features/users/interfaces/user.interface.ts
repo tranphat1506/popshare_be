@@ -16,6 +16,16 @@ export interface IUserDocument extends Document {
     privacies: IPrivacySettings;
     notifications: INotificationSettings;
 }
+
+export interface IUserPublicDetail {
+    _id: string | ObjectId;
+    username: string;
+    avatarEmoji: string;
+    displayName: string;
+    profilePicture: string;
+    avatarColor: string;
+    createdAt: Date;
+}
 export interface INotificationSettings {
     messages: boolean;
     addFriends: boolean;
