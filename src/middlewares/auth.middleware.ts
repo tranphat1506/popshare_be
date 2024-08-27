@@ -34,7 +34,7 @@ export class AuthMiddleware {
             }
             const token = socket.handshake.headers.authorization.split(' ')[1] as string;
             const payload = await verifyToken(token, config.JWT_ACCESS_TOKEN_SECRET);
-            socket.user = { userId: payload.userId.toString() };
+            socket.user = { userId: `${payload.userId}` };
             next();
         } catch (error) {
             next(error);

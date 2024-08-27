@@ -6,7 +6,7 @@ import { IFriendDocument, IUpdateFriendRequest } from '../interfaces/friend.inte
 import { friendCache } from '@root/services/redis/friend.cache';
 import { friendService } from '@root/services/db/friend.services';
 import HTTP_STATUS from 'http-status-codes';
-import { IRoomDocument } from '@root/features/rooms/interfaces/room.interface';
+import { IMemberDetail, IRoomDocument } from '@root/features/rooms/interfaces/room.interface';
 import { roomCache } from '@root/services/redis/room.cache';
 import { roomQueue } from '@root/services/queues/room.queue';
 import { INotificationDocument } from '@root/features/notifications/interfaces/notifications.interface';
@@ -117,6 +117,10 @@ export class FriendMethodController {
                                 permissionScore: 9999,
                             },
                         ],
+                    },
+                    roomBannedList: {
+                        member: 0,
+                        list: [] as IMemberDetail[],
                     },
                 } as IRoomDocument;
                 await roomCache.addRoomToCache(newRoom);

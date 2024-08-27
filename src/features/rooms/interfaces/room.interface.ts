@@ -16,7 +16,7 @@ export interface IMemberDetail {
 }
 
 // Interface cho MembersList
-interface IMembersList {
+export interface IMembersList {
     member: number;
     list: IMemberDetail[]; // Mảng các MemberDetail
 }
@@ -45,3 +45,5 @@ export interface ISocketChatRoomSetup {
 export interface IRoomJob {
     value?: IRoomDocument | string;
 }
+
+export type RoomActionTypes = 'socketJoin' | 'kickMember';
