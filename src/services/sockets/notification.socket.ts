@@ -10,7 +10,6 @@ export class NotificationSocket extends BaseSocket {
 
     public listen() {
         this.io.on('connection', (socket: Socket) => {
-            console.log('Welcome');
             socket.on('disconnect', () => {});
         });
     }
