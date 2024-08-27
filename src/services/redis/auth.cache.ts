@@ -4,7 +4,7 @@ import { ServerError } from '@root/helpers/error-handler';
 
 class AuthCache extends BaseCache {
     constructor() {
-        super('Auth');
+        super('AuthCache');
     }
 
     public async saveRefreshToken(refreshToken: string, userId: ObjectId | string): Promise<void> {

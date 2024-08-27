@@ -4,7 +4,7 @@ import { ServerError } from '@root/helpers/error-handler';
 
 class NotificationCache extends BaseCache {
     constructor() {
-        super('notiCache');
+        super('NotificationCache');
     }
 
     public async addNotiToCache(noti: INotificationDocument) {

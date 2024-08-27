@@ -6,7 +6,7 @@ import { IOnlineState } from '../sockets/socket.interfaces';
 
 class UserCache extends BaseCache {
     constructor() {
-        super('User');
+        super('UserCache');
     }
 
     public async saveUserToCache(userId: string, createdUser: IUserDocument): Promise<void> {
