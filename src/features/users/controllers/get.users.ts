@@ -31,7 +31,16 @@ export class GetUserController {
                       count: friendCachedList.length,
                       friends: friendCachedList,
                   };
-            return res.status(HTTP_STATUS.OK).json({ message: 'Successfully get detail user.', user, friendList });
+            return res.status(HTTP_STATUS.OK).json({
+                message: 'Successfully get detail user.',
+                user,
+                friends: {
+                    count: friendList.count,
+                    friendList: friendList.friends.map((f) =>
+                        `${f.receiverId}` === userId ? `${f.senderId}` : `${f.receiverId}`,
+                    ),
+                },
+            });
         } catch (error) {
             next(error);
         }
