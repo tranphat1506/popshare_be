@@ -1,6 +1,6 @@
 export enum SocketEventList {
-    sendNotification = 'notiSent',
-    broadcastNotification = 'broadcast',
-    onSetupChatRoom = 'setupChatRoom',
+    sendNotification = 'NotiSent',
+    broadcastNotification = 'Broadcast',
+    onSetupChatRoom = 'SetupChatRoom',
     sendSocketRequestError = 'SocketRequestError',
 }
