@@ -1,4 +1,9 @@
-import { IRoomDocument } from '@root/features/rooms/interfaces/room.interface';
+import {
+    IMemberDetail,
+    IMembersList,
+    IRoomDocument,
+    RoomActionTypes,
+} from '@root/features/rooms/interfaces/room.interface';
 import { BaseCache } from './base.cache';
 import { ServerError } from '@root/helpers/error-handler';
 
@@ -32,6 +37,30 @@ class RoomCache extends BaseCache {
                 roomMembers: JSON.parse(members),
                 roomBannedList: JSON.parse(blocked),
             } as IRoomDocument;
+        } catch (error) {
+            this.log.error(error);
+            throw new ServerError('Server error. Try again.');
+        }
+    }
+
+    public async checkingPermit2ActionByUserId(userId: string, roomId: string, action: RoomActionTypes) {
+        if (!userId || !roomId) return { canAction: false, message: 'Invalid userId or roomId' };
+        try {
+            const members = await this.client.hget('room_members', `${roomId}`);
+            const blocked = await this.client.hget('room_memebers_blocked', `${roomId}`);
+            if (!members || !blocked) return { canAction: false, message: 'Cannot found this room.' };
+            const blockedData = JSON.parse(blocked) as IMembersList;
+            const membersData = JSON.parse(members) as IMembersList;
+            const isBlockedUser = blockedData.list.find((m) => `${m.memberId}` === userId);
+            const memberDetail = membersData.list.find((m) => `${m.memberId}` === userId);
+            switch (action) {
+                case 'socketJoin':
+                    if (isBlockedUser || !memberDetail)
+                        return { canAction: false, message: 'User was blocked from this room.' };
+                    return { canAction: true, message: 'Success action.' };
+                default:
+                    return { canAction: false, message: 'User cannot action to this room.' };
+            }
         } catch (error) {
             this.log.error(error);
             throw new ServerError('Server error. Try again.');

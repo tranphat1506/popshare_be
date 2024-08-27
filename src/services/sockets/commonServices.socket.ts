@@ -1,8 +1,9 @@
 import { Socket } from 'socket.io';
 import { socketIONotification } from './notification.socket';
 import { IEntity, INotificationDocument } from '@root/features/notifications/interfaces/notifications.interface';
-import { ServerError } from '@root/helpers/error-handler';
+import { BadRequestError, SocketEventError } from '@root/helpers/error-handler';
 import { SocketEventList } from './socketEvent.constant';
+import { roomCache } from '../redis/room.cache';
 export class CommonSocketServerService {
     public static sendNotificationToEntity(noti: INotificationDocument, receiverEntity?: IEntity) {
         const receiver: IEntity = receiverEntity ?? noti.receiver;
@@ -15,9 +16,9 @@ export class CommonSocketServerService {
                 socketIONotification.to(toReceiver).emit(SocketEventList.sendNotification, noti);
                 break;
             case 'broadcast':
-                throw new ServerError(`Please use broadcast services, not commnon send notification.`);
+                throw new BadRequestError(`Please use broadcast services, not commnon send notification.`);
             default:
-                throw new ServerError(
+                throw new BadRequestError(
                     `Invalid noti.sender.entityType == ${noti.sender.entityType}, please contact admin.`,
                 );
         }
@@ -33,7 +34,15 @@ export class CommonSocketServerService {
     }
     public static async joinSocketChatRooms(socket: Socket, roomList: string[]) {
         for await (const roomId of roomList) {
-            console.log(`${socket.id} join ${roomId}`);
+            const { canAction, message } = await roomCache.checkingPermit2ActionByUserId(
+                `${socket.user?.userId}`,
+                roomId,
+                'socketJoin',
+            );
+            if (!canAction) {
+                throw new SocketEventError(SocketEventList.onSetupChatRoom, message, null);
+            }
+            console.log(`${socket.user?.userId} join ${roomId}`);
             this._joinSocketRoom(socket, roomId);
         }
     }
