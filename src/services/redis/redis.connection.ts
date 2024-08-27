@@ -2,6 +2,8 @@ import { AuthModel } from '@root/features/auth/models/auth.schema';
 import { BaseCache } from './base.cache';
 import { userCache } from './user.cache';
 import { userService } from '../db/user.services';
+import { RoomModel } from '@root/features/rooms/models/room.schema';
+import { roomCache } from './room.cache';
 
 class RedisConnection extends BaseCache {
     constructor() {
@@ -9,11 +11,17 @@ class RedisConnection extends BaseCache {
     }
     public async connect(): Promise<void> {
         try {
-            const all = await AuthModel.find();
+            const allUsers = await AuthModel.find();
             await Promise.all(
-                all.map(async (authUser) => {
+                allUsers.map(async (authUser) => {
                     const user = await userService.getUserByAuthId(`${authUser._id}`);
                     return userCache.saveUserToCache(`${user._id}`, user);
+                }),
+            );
+            const allRooms = await RoomModel.find();
+            await Promise.all(
+                allRooms.map(async (room) => {
+                    return roomCache.addRoomToCache(room);
                 }),
             );
             await this.pingToRedis(this.client);
