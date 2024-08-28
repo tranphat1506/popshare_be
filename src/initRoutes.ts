@@ -7,6 +7,7 @@ import { serverAdapter } from './services/queues/base.queue';
 import { friendRoutes } from './features/friends/routes/friend.router';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { roomRoutes } from './features/rooms/routes/room.router';
+import { chatRoutes } from './features/rooms/routes/chat.router';
 const BASE_PATH = `/api/${config.APP_VERSION}`;
 
 export default (app: Application) => {
@@ -22,6 +23,7 @@ export default (app: Application) => {
         app.use(BASE_PATH + '/user', userRoutes.routes());
         app.use(BASE_PATH + '/friend', friendRoutes.routes());
         app.use(BASE_PATH + '/room', roomRoutes.routes());
+        app.use(BASE_PATH + '/chat', chatRoutes.routes());
 
         app.post(BASE_PATH, (req, res) => {
             return res.sendStatus(200);

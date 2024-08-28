@@ -58,7 +58,7 @@ class RoomServices {
         return false;
     }
 
-    public async createMessages(chatRoomId: Types.ObjectId | string, message: IMessageDocument) {
+    public async createMessage(chatRoomId: Types.ObjectId | string, message: IMessageDocument) {
         await MessageModel.create({ ...message, roomId: chatRoomId });
     }
 }

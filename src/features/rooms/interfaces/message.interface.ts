@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 type IMessageTypeTypes = 'text' | 'image' | 'video' | 'file';
 export const MessageTypeEnum: IMessageTypeTypes[] = ['file', 'image', 'text', 'video'];
 
-interface IReaction {
+export interface IReaction {
     data: string;
     senderId: string | Types.ObjectId;
     createdAt: number;
@@ -22,7 +22,25 @@ export interface IMessageDocument extends Document {
     seenBy: Types.ObjectId[] | string[]; // Danh sách người đã xem tin nhắn
     repliedTo?: Types.ObjectId | string; // ID của tin nhắn mà tin nhắn này đang trả lời
 
-    createdAt: Number; // Thời gian gửi tin nhắn
-    isEveryoneRecalled: boolean; // Nếu tất cả người dùng trong phòng đã thu hồi tin nhắn
+    createdAt: number; // Thời gian gửi tin nhắn
+    isEveryoneRecalled: boolean; // Nếu nguoi gui đã thu hồi tin nhắn voi tất cả người dùng trong phòng
     isSelfRecalled: boolean; // Nếu người gửi đã thu hồi tin nhắn
+}
+
+export interface ICreateMessagePayload {
+    senderId: string;
+    messageType?: IMessageTypeTypes;
+    roomId?: string;
+    content?: string;
+    mediaUrl?: string;
+    repliedTo?: Types.ObjectId | string; // ID của tin nhắn mà tin nhắn này đang trả lời
+}
+export interface IGetMessagePayload {
+    roomId?: string;
+    page?: number;
+    totalGet?: number;
+}
+
+export interface IChatJob {
+    value?: IMessageDocument;
 }

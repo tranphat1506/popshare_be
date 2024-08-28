@@ -1,4 +1,4 @@
-import { IRoomDocument, IRoomJob } from '@root/features/rooms/interfaces/room.interface';
+import { IRoomJob } from '@root/features/rooms/interfaces/room.interface';
 import { BaseQueue } from './base.queue';
 import { roomWorker } from '../worker/room.worker';
 

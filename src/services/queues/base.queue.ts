@@ -8,7 +8,8 @@ import { IUserJob } from '@root/features/users/interfaces/user.interface';
 import { IFriendJob } from '@root/features/friends/interfaces/friend.interface';
 import { IRoomJob } from '@root/features/rooms/interfaces/room.interface';
 import { INotiJob } from '@root/features/notifications/interfaces/notifications.interface';
-type IBaseJobData = IAuthJob | IUserJob | IFriendJob | IRoomJob | INotiJob;
+import { IChatJob } from '@root/features/rooms/interfaces/message.interface';
+type IBaseJobData = IAuthJob | IUserJob | IFriendJob | IRoomJob | INotiJob | IChatJob;
 let bullAdapters: BullAdapter[] = [];
 export let serverAdapter: ExpressAdapter;
 

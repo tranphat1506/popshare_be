@@ -24,6 +24,15 @@ interface IMessageSettings {
     allowMemberMessage: boolean;
     allowAutoJoin: boolean;
 }
+
+export interface IRoomData {
+    _id: Types.ObjectId | string; // room id
+    roomName?: string;
+    createdBy: Types.ObjectId | string;
+    createdAt: number;
+    messageSettings: IMessageSettings;
+    roomType: RoomTypeTypes;
+}
 export interface IRoomDocument extends Document {
     _id: Types.ObjectId | string; // room id
     roomName?: string;
@@ -46,4 +55,4 @@ export interface IRoomJob {
     value?: IRoomDocument | string;
 }
 
-export type RoomActionTypes = 'socketJoin' | 'kickMember';
+export type RoomActionTypes = 'socketJoin' | 'kickMember' | 'sendMessage' | 'getMessage';
