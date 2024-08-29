@@ -4,7 +4,6 @@ import { config } from '@root/config';
 import { NotAuthorizedError } from '@root/helpers/error-handler';
 import { AuthPayload } from '@auth/interfaces/auth.interfaces';
 import { Socket } from 'socket.io';
-import { ExtendedError } from 'socket.io/dist/namespace';
 export class AuthMiddleware {
     public async verifyUser(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {

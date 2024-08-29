@@ -16,14 +16,13 @@ export default (app: Application) => {
         app.use(BASE_PATH, authRoutes.routes());
         app.use(BASE_PATH, authRoutes.signoutRoute());
 
-        app.use(authMiddleware.verifyUser);
         // queue routes
-        app.use('/admin/queues', serverAdapter.getRouter());
+        app.use('/admin/queues', authMiddleware.verifyUser, serverAdapter.getRouter());
         // user routes
-        app.use(BASE_PATH + '/user', userRoutes.routes());
-        app.use(BASE_PATH + '/friend', friendRoutes.routes());
-        app.use(BASE_PATH + '/room', roomRoutes.routes());
-        app.use(BASE_PATH + '/chat', chatRoutes.routes());
+        app.use(BASE_PATH + '/user', authMiddleware.verifyUser, userRoutes.routes());
+        app.use(BASE_PATH + '/friend', authMiddleware.verifyUser, friendRoutes.routes());
+        app.use(BASE_PATH + '/room', authMiddleware.verifyUser, roomRoutes.routes());
+        app.use(BASE_PATH + '/chat', authMiddleware.verifyUser, chatRoutes.routes());
 
         app.post(BASE_PATH, (req, res) => {
             return res.sendStatus(200);
