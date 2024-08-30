@@ -7,6 +7,7 @@ import { userCache } from '@root/services/redis/user.cache';
 import { NextFunction, Request, Response } from 'express';
 import HTTP_STATUS from 'http-status-codes';
 import { IUserPublicDetail } from '../interfaces/user.interface';
+import mongoose, { isValidObjectId } from 'mongoose';
 
 export class GetUserController {
     public async all(req: Request, res: Response): Promise<void> {
@@ -49,7 +50,10 @@ export class GetUserController {
     public async getByUserId(req: Request, res: Response, next: NextFunction) {
         try {
             const { userId } = req.currentUser!;
-            const { userId: tagetId } = req.body;
+            const { userId: tagetId } = req.params;
+            if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+                throw new NotFoundError('Cannot found this user.');
+            }
             const friendship = await friendService.getFriendRequestBetweenTwo(`${userId}`, tagetId);
             const userCached = await userCache.getUserFromCache(`${tagetId}`);
             let user = userCached ?? (await userService.getUserByUserId(`${tagetId}`));
@@ -93,8 +97,8 @@ export class GetUserController {
     public async getOnlineStateByUserId(req: Request, res: Response, next: NextFunction) {
         try {
             const { userId } = req.currentUser!;
-            const { userId: targetId } = req.body;
-            if (!targetId) {
+            const { userId: targetId } = req.params;
+            if (!targetId || !mongoose.Types.ObjectId.isValid(targetId)) {
                 throw new BadRequestError('Invalid user id.');
             }
             const onlineState = await this._gettingOnlineState(`${userId}`, targetId);

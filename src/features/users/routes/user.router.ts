@@ -10,6 +10,10 @@ class UserRoutes {
     public routes(): Router {
         this.router.post('/user', GetUserController.prototype.all);
         this.router.post('/me', GetUserController.prototype.me);
+        this.router.post('/:userId', GetUserController.prototype.getByUserId);
+        this.router.post('/online', GetUserController.prototype.getOnlineStateByUserList);
+        this.router.post('/online/:userId', GetUserController.prototype.getOnlineStateByUserId);
+
         return this.router;
     }
 }
