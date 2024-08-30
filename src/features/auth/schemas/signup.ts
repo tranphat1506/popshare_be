@@ -3,7 +3,7 @@ const MIN_LENGTH_DEFAULT = 4;
 const MAX_LENGTH_DEFAULT = 32;
 const MAX_LENGTH_USERNAME = 16;
 const MAX_LENGTH_DISPLAY_NAME = MAX_LENGTH_DEFAULT;
-const CommonErrorMessageCode = {
+export const CommonErrorMessageCode = {
     required: 'ERROR_REQUIRED',
     base: 'ERROR_DIFF_TYPE',
     min: 'ERROR_MIN {{#limit}}',

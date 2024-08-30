@@ -8,22 +8,27 @@ import HTTP_STATUS from 'http-status-codes';
 import { generateToken, verifyToken } from '@root/helpers/jwt.helper';
 import { AuthPayload } from '../interfaces/auth.interfaces';
 import { authCache } from '@service/redis/auth.cache';
+import { MESSAGE_RESPONSE_LIST } from '@root/helpers/error.constants';
 export class SignInController {
+    // @joiValidation(regularSigninSchema)
     public async byIdentityObject(req: Request, res: Response, next: NextFunction) {
         try {
             const { password, rememberDevice, ...rest } = req.body;
             const identity: IIdentityObject = rest;
             const existUser = await authService.getUserByIdentityObject(identity);
             if (!existUser) {
-                throw new BadRequestError('Invalid credentials');
+                throw new BadRequestError(`"user" ${MESSAGE_RESPONSE_LIST.invalidCredentials}`);
             }
 
             const passwordMatch: boolean = await existUser.comparePassword(password);
             if (!passwordMatch) {
-                throw new BadRequestError('Invalid credentials');
+                throw new BadRequestError(`"user" ${MESSAGE_RESPONSE_LIST.invalidCredentials}`);
             }
 
             const user: IUserDocument = await userService.getUserByAuthId(`${existUser._id}`);
+            if (!user.isVerify) {
+                throw new NotAuthorizedError(`"user" ${MESSAGE_RESPONSE_LIST.userNotVerify}`);
+            }
             const userJwt: string = await generateToken(
                 { userId: user._id },
                 config.JWT_ACCESS_TOKEN_SECRET,

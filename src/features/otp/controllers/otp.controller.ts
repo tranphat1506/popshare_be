@@ -13,7 +13,9 @@ export class OTPController {
         try {
             const userId = `${req.currentUser!.userId}`;
             const encryptedOtp: string = req.body.encryptOtp;
-
+            if (!encryptedOtp) {
+                throw new BadRequestError('OTP had expired!');
+            }
             const currentOtp = await otpCache.getOtpFromCache(userId);
             if (!currentOtp) {
                 throw new BadRequestError('OTP had expired!');

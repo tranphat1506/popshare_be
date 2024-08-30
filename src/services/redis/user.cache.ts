@@ -20,6 +20,7 @@ class UserCache extends BaseCache {
             notifications,
             privacies,
             displayName,
+            isVerify,
         } = createdUser;
         const dataToSave = {
             _id: `${_id}`,
@@ -31,6 +32,7 @@ class UserCache extends BaseCache {
             profilePicture: `${profilePicture}`,
             notifications: notifications,
             privacies: privacies,
+            isVerify,
         };
         try {
             await this.client.zadd('userid_sort_list', Helpers.generateRandomIntegers(10), userId);
