@@ -4,12 +4,10 @@ import bcryptjs from 'bcryptjs';
 const SALT_ROUND = 10;
 const authSchema = new Schema({
     username: { type: String },
-    uId: { type: String },
     email: { type: String },
     password: { type: String },
     createdAt: { type: Date, default: Date.now },
-    passwordResetToken: { type: String, default: '' },
-    passwordResetExpires: { type: Number },
+    isVerify: { type: Boolean, default: false },
 });
 
 // Hashed password before we save a authSchema

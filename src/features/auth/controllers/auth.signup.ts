@@ -75,6 +75,7 @@ export class SignUpController {
             email: Helpers.lowerCase(email),
             password,
             createdAt: new Date(),
+            isVerify: false,
         } as IAuthDocument;
     }
 
@@ -89,6 +90,7 @@ export class SignUpController {
             profilePicture,
             avatarColor,
             avatarEmoji,
+            isVerify: false,
             notifications: {
                 messages: true,
                 addFriends: true,

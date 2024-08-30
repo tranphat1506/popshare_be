@@ -8,6 +8,7 @@ export interface IUserDocument extends Document {
     email?: string;
     password?: string;
     createdAt?: Date;
+    isVerify?: boolean;
 
     avatarEmoji: string;
     displayName: string;
@@ -25,6 +26,7 @@ export interface IUserPublicDetail {
     profilePicture: string;
     avatarColor: string;
     createdAt: Date;
+    isVerify: boolean;
 }
 export interface INotificationSettings {
     messages: boolean;

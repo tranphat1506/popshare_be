@@ -32,6 +32,7 @@ class UserServices {
             username: '$authId.username',
             email: '$authId.email',
             createdAt: '$authId.createdAt',
+            isVerify: '$authId.isVerify',
             displayName: 1,
             notifications: 1,
             privacies: 1,
