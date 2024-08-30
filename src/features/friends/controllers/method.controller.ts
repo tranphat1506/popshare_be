@@ -11,7 +11,6 @@ import { roomCache } from '@root/services/redis/room.cache';
 import { roomQueue } from '@root/services/queues/room.queue';
 import { INotificationDocument } from '@root/features/notifications/interfaces/notifications.interface';
 import { notiQueue } from '@root/services/queues/notification.queue';
-import { socketIONotification } from '@root/services/sockets/notification.socket';
 import { CommonSocketServerService } from '@root/services/sockets/commonServices.socket';
 export class FriendMethodController {
     public async addFriendMethod(req: Request, res: Response, next: NextFunction) {
