@@ -1,14 +1,13 @@
-import JWT, { JwtPayload } from 'jsonwebtoken';
+import JWT from 'jsonwebtoken';
 import { NotAuthorizedError, ServerError } from './error-handler';
-import { AuthPayload } from '@root/features/auth/interfaces/auth.interfaces';
-const verifyToken = async (token: string, secret: string): Promise<AuthPayload> => {
+const verifyToken = async <P>(token: string, secret: string): Promise<P> => {
     try {
-        return JWT.verify(token, secret) as AuthPayload;
+        return JWT.verify(token, secret) as any;
     } catch (error) {
         throw new NotAuthorizedError('Token is not available. Please login again.');
     }
 };
-const generateToken = (schema: any, secret: string, tokenLife: string): Promise<string> => {
+const generateToken = (schema: any, secret: string, tokenLife: string | number | undefined): Promise<string> => {
     return new Promise((resolve, reject) => {
         JWT.sign(
             schema,

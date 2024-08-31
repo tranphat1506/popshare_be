@@ -29,6 +29,7 @@ class Config {
     public JWT_ACCESS_TOKEN_LIFETIME: string;
     public JWT_REFRESH_TOKEN_LIFETIME: string;
     public APP_VERSION: string;
+    public JWT_OTP_SECRET: string;
     private readonly DEFAULT_DATABASE_URL = 'mongodb://localhost:27017/popshare_be';
 
     constructor() {
@@ -44,6 +45,7 @@ class Config {
         this.JWT_REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_TOKEN_SECRET || '321';
         this.JWT_ACCESS_TOKEN_LIFETIME = process.env.JWT_ACCESS_TOKEN_LIFETIME || '3h';
         this.JWT_REFRESH_TOKEN_LIFETIME = process.env.JWT_REFRESH_TOKEN_LIFETIME || '7d';
+        this.JWT_OTP_SECRET = process.env.JWT_OTP_SECRET || 'otp_secret';
         this.APP_VERSION = process.env.APP_VERSION || 'v1';
     }
 

@@ -8,6 +8,7 @@ import { friendRoutes } from './features/friends/routes/friend.router';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { roomRoutes } from './features/rooms/routes/room.router';
 import { chatRoutes } from './features/rooms/routes/chat.router';
+import { otpRouter } from './features/otp/routes/otp.router';
 const BASE_PATH = `/api/${config.APP_VERSION}`;
 
 export default (app: Application) => {
@@ -18,7 +19,7 @@ export default (app: Application) => {
 
         // queue routes
         app.use('/admin/queues', authMiddleware.verifyUser, serverAdapter.getRouter());
-        // user routes
+        app.use(BASE_PATH + '/otp', authMiddleware.verifyUser, otpRouter.routes());
         app.use(BASE_PATH + '/user', authMiddleware.verifyUser, userRoutes.routes());
         app.use(BASE_PATH + '/friend', authMiddleware.verifyUser, friendRoutes.routes());
         app.use(BASE_PATH + '/room', authMiddleware.verifyUser, roomRoutes.routes());

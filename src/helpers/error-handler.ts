@@ -68,6 +68,15 @@ export class NotAuthorizedError extends CustomError {
     }
 }
 
+export class NotAcceptableError extends CustomError {
+    statusCode = HTTP_STATUS.NOT_ACCEPTABLE;
+    status = 'error';
+
+    constructor(message: string) {
+        super(message);
+    }
+}
+
 export class SocketEventError extends Error {
     public event: string;
     public payload: any;
