@@ -13,6 +13,7 @@ import { userQueue } from '@root/services/queues/user.queue';
 import { generateToken } from '@helpers/jwt.helper';
 import { config } from '@root/config';
 import HTTP_STATUS from 'http-status-codes';
+import { sendNewOtpWithUnauthorized } from '@root/helpers/otp.v1';
 export class SignUpController {
     @joiValidation(regularSignupSchema)
     public async createByEmail(req: Request, res: Response, next: NextFunction) {
@@ -36,7 +37,7 @@ export class SignUpController {
 
             const userData: IUserDocument = SignUpController.prototype.generateUserData(
                 {
-                    _id: authObjectId,
+                    _id: authObjectId, // NOTE: it's not the user id
                     username,
                     email,
                     password,
@@ -49,7 +50,8 @@ export class SignUpController {
 
             // add to redis cache
             await userCache.saveUserToCache(`${userObjectId}`, userData);
-
+            // send verify account otp
+            await sendNewOtpWithUnauthorized(`${userObjectId}`);
             // Add to database
             authQueue.addAuthUserJob('addAuthUserToDB', { value: authData });
             userQueue.addUserJob('addUserToDB', { value: userData });

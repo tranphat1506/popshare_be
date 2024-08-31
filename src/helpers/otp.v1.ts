@@ -33,24 +33,27 @@ export async function verifyEncryptedOtpToken(otpToken: string) {
 }
 
 export async function sendNewOtpWithUnauthorized(userId: string) {
-    let currentOtp = await otpCache.getOtpFromCache(userId);
-    if (!currentOtp) {
-        currentOtp = {
-            _id: new Types.ObjectId(),
-            otpNumber: generateRandomOTP(OTP_MAX_LENGTH),
-            maxOtpLength: OTP_MAX_LENGTH,
-            createdAt: Date.now(),
-            expiredAt: Date.now() + 180000, // expired after 3min
-        } as IOTPDocument;
+    try {
+        let currentOtp = await otpCache.getOtpFromCache(userId);
+        if (!currentOtp) {
+            currentOtp = {
+                _id: new Types.ObjectId(),
+                otpNumber: generateRandomOTP(OTP_MAX_LENGTH),
+                maxOtpLength: OTP_MAX_LENGTH,
+                createdAt: Date.now(),
+                expiredAt: Date.now() + 180000, // expired after 3min
+            } as IOTPDocument;
 
-        otpQueue.addOtpToDB({ value: currentOtp });
-        await otpCache.addOtpToCache(userId, currentOtp);
-    }
+            otpQueue.addOtpToDB({ value: currentOtp });
+            await otpCache.addOtpToCache(userId, currentOtp);
+        }
 
-    if (config.NODE_ENV === 'development') {
-        console.log(currentOtp);
-    } else {
-        console.log('send email', currentOtp);
+        if (config.NODE_ENV === 'development') {
+            console.log(currentOtp);
+        } else {
+            console.log('send email', currentOtp);
+        }
+    } catch (error) {
+        throw new ServerError(`"server" ${MESSAGE_RESPONSE_LIST.serverError}`);
     }
-    throw new NotAuthorizedError(`"user" ${MESSAGE_RESPONSE_LIST.userNotVerify}`);
 }

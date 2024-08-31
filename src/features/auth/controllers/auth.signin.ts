@@ -25,10 +25,10 @@ export class SignInController {
             const { password, rememberDevice, otpToken, ...rest } = req.body;
             const identity: IIdentityObject = rest;
             const authData = await authService.getUserByIdentityObject(identity);
-            const userData = await userService.getUserByAuthId(`${authData._id}`);
             if (!authData) {
                 throw new BadRequestError(`"user" ${MESSAGE_RESPONSE_LIST.invalidCredentials}`);
             }
+            const userData = await userService.getUserByAuthId(`${authData._id}`);
 
             const passwordMatch: boolean = await authData.comparePassword(password);
             if (!passwordMatch) {
@@ -40,10 +40,15 @@ export class SignInController {
              * Client: keep login with otp code will auto verify user
              *  */
             if (!authData.isVerify) {
-                if (!otpToken) await sendNewOtpWithUnauthorized(`${userData._id}`);
-                else {
+                if (!otpToken) {
+                    await sendNewOtpWithUnauthorized(`${userData._id}`);
+                    throw new NotAuthorizedError(`"user" ${MESSAGE_RESPONSE_LIST.userNotVerify}`);
+                } else {
                     const currentOtp = await otpCache.getOtpFromCache(`${userData._id}`);
-                    if (!currentOtp) await sendNewOtpWithUnauthorized(`${userData._id}`);
+                    if (!currentOtp) {
+                        await sendNewOtpWithUnauthorized(`${userData._id}`);
+                        throw new NotAuthorizedError(`"user" ${MESSAGE_RESPONSE_LIST.userNotVerify}`);
+                    }
                     // verify OTP token on development environment
                     else if (config.NODE_ENV === 'development') {
                         console.log(currentOtp);
@@ -95,6 +100,7 @@ export class SignInController {
                 username: authData!.username,
                 email: authData!.email,
                 createdAt: authData!.createdAt,
+                isVerify: true, // always true because of only verify account data response for client
             } as IUserDocument;
             return res.status(HTTP_STATUS.OK).json({
                 message: 'User login successfully',
