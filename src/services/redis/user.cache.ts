@@ -118,6 +118,18 @@ class UserCache extends BaseCache {
             throw new ServerError('Server error. Try again.');
         }
     }
+
+    public async updateUserByUserId(userId: string, field: keyof IUserDocument, data: any) {
+        try {
+            const user = await this.getUserFromCache(userId);
+            if (!user) return null;
+            user[field] = data as never;
+            await this.saveUserToCache(userId, user);
+        } catch (error) {
+            // this.log.error(error);
+            throw new ServerError('Server error. Try again.');
+        }
+    }
 }
 
 export const userCache = new UserCache();

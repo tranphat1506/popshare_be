@@ -32,6 +32,11 @@ export interface IAuthDocument extends Document {
     hashPassword(password: string): Promise<string>;
 }
 
+export interface UpdateAuthDocumentProps {
+    authId: string;
+    field: keyof IAuthDocument;
+    data: any;
+}
 export interface IAuthJob {
-    value?: IAuthDocument | string;
+    value?: IAuthDocument | string | UpdateAuthDocumentProps;
 }

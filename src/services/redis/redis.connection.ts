@@ -15,7 +15,8 @@ class RedisConnection extends BaseCache {
             await Promise.all(
                 allUsers.map(async (authUser) => {
                     const user = await userService.getUserByAuthId(`${authUser._id}`);
-                    return userCache.saveUserToCache(`${user._id}`, user);
+                    // user cache
+                    await userCache.saveUserToCache(`${user._id}`, user);
                 }),
             );
             const allRooms = await RoomModel.find();
