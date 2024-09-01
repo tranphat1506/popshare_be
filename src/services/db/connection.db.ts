@@ -8,6 +8,7 @@ class MongoDbConnection extends LoggerBase {
     connect(): void {
         this.setupDatabase();
         mongoose.connection.on('disconnected', this.connect);
+        mongoose.connection.on('error', this.connect);
     }
     async setupDatabase(): Promise<void> {
         try {
