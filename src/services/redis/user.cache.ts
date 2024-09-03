@@ -46,7 +46,12 @@ class UserCache extends BaseCache {
     public async getUserFromCache(userId: string): Promise<IUserDocument | null> {
         try {
             const user = await this.client.hget(`users`, `${userId}`);
-            return user ? (JSON.parse(user) as IUserDocument) : null;
+            if (!user) return null;
+            const data = JSON.parse(user);
+            Object.keys(data).forEach((field) => {
+                data[field] = data[field] === 'undefined' || data[field] === 'null' ? undefined : data[field];
+            });
+            return data;
         } catch (error) {
             this.log.error(error);
             throw new ServerError('Server error. Try again.');

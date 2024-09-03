@@ -1,4 +1,8 @@
-import { IFriendDocument, IUpdateFriendRequest } from '@root/features/friends/interfaces/friend.interface';
+import {
+    IFriendDocument,
+    IUpdateFriendRequest,
+    RequestStatusTypes,
+} from '@root/features/friends/interfaces/friend.interface';
 import { BaseCache } from './base.cache';
 import { BadRequestError, ServerError } from '@root/helpers/error-handler';
 
@@ -77,6 +81,17 @@ class FriendCache extends BaseCache {
             const rq = await this.client.hget(`friend_request`, `${requestId}`);
             if (rq) return JSON.parse(rq) as IFriendDocument;
             return null;
+        } catch (error) {
+            this.log.error(error);
+            throw new ServerError('Server error!');
+        }
+    }
+
+    public async checkingPermitBetweenTwoUser(userId1: string, userId2: string): Promise<RequestStatusTypes | null> {
+        try {
+            const friendship = await this.getFriendRequestFromCache(userId1, userId2);
+            if (!friendship) return userId1 === userId2 ? 'accepted' : null;
+            return friendship.status;
         } catch (error) {
             this.log.error(error);
             throw new ServerError('Server error!');

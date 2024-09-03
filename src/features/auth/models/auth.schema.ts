@@ -6,7 +6,7 @@ const authSchema = new Schema({
     username: { type: String },
     email: { type: String },
     password: { type: String },
-    createdAt: { type: Date, default: Date.now },
+    createdAt: { type: Number, default: Date.now() },
     isVerify: { type: Boolean, default: false },
 });
 

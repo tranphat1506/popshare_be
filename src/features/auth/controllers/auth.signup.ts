@@ -19,8 +19,12 @@ export class SignUpController {
     public async createByEmail(req: Request, res: Response, next: NextFunction) {
         const { username, password, email, avatarColor, displayName, avatarEmoji } = req.body;
         try {
-            const checkIfUserExist: IAuthDocument = await authService.getUserByIdentityObject({ username, email });
-            if (checkIfUserExist) throw new BadRequestError('Invalid credentials');
+            const checkIfUserExist: IAuthDocument | null = await authService.getUserByIdentityObject({
+                username,
+                email,
+            });
+            if (checkIfUserExist?.username === username) throw new BadRequestError(`"username" ERROR_ALREADY_EXIST`);
+            if (checkIfUserExist?.email === email) throw new BadRequestError(`"email" ERROR_ALREADY_EXIST`);
 
             const authObjectId: ObjectId = new ObjectId();
             const userObjectId: ObjectId = new ObjectId();
@@ -76,7 +80,7 @@ export class SignUpController {
             username: Helpers.lowerCase(username),
             email: Helpers.lowerCase(email),
             password,
-            createdAt: new Date(),
+            createdAt: Date.now(),
             isVerify: false,
         } as IAuthDocument;
     }

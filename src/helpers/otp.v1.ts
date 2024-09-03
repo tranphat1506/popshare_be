@@ -8,7 +8,7 @@ import { Types } from 'mongoose';
 import { OTP_MAX_LENGTH } from '@root/features/otp/controllers/otp.controller';
 import { otpQueue } from '@root/services/queues/otp.queue';
 
-export function generateRandomOTP(length: number): number {
+export function generateRandomOTP(length: number): string {
     let otp: string = '';
 
     for (let i = 0; i < length; i++) {
@@ -17,7 +17,7 @@ export function generateRandomOTP(length: number): number {
         otp += randomDigit.toString();
     }
 
-    return Number(otp);
+    return otp;
 }
 
 export function generateEncryptedOtpToken(otp: IOTPDocument) {
@@ -34,10 +34,12 @@ export async function verifyEncryptedOtpToken(otpToken: string) {
 
 export async function sendNewOtpWithUnauthorized(userId: string) {
     try {
-        let currentOtp = await otpCache.getOtpFromCache(userId);
-        if (!currentOtp) {
+        const otpData = await otpCache.getOtpFromCache(userId);
+        let currentOtp: IOTPDocument | undefined = otpData?.otp;
+        if (!otpData) {
             currentOtp = {
                 _id: new Types.ObjectId(),
+                userId: new Types.ObjectId(userId),
                 otpNumber: generateRandomOTP(OTP_MAX_LENGTH),
                 maxOtpLength: OTP_MAX_LENGTH,
                 createdAt: Date.now(),
@@ -47,13 +49,13 @@ export async function sendNewOtpWithUnauthorized(userId: string) {
             otpQueue.addOtpToDB({ value: currentOtp });
             await otpCache.addOtpToCache(userId, currentOtp);
         }
-
         if (config.NODE_ENV === 'development') {
             console.log(currentOtp);
         } else {
             console.log('send email', currentOtp);
         }
     } catch (error) {
+        console.log(error);
         throw new ServerError(`"server" ${MESSAGE_RESPONSE_LIST.serverError}`);
     }
 }

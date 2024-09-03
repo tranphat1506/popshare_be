@@ -5,16 +5,16 @@ import { Helpers } from '@root/helpers/helpers';
 import { Types } from 'mongoose';
 
 class AuthServices {
-    public async getUserByIdentityObject({ username, email, ...identity }: IIdentityObject): Promise<IAuthDocument> {
+    public async getUserByIdentityObject({ ...identities }: IIdentityObject): Promise<IAuthDocument | null> {
+        const account = identities.account ? Helpers.lowerCase(identities.account) : undefined;
         const query = {
             $or: [
-                {
-                    username: username ? Helpers.lowerCase(username) : null,
-                },
-                { email: email ? Helpers.lowerCase(email) : null },
+                { username: account ?? identities.username },
+                { email: account ?? identities.email },
+                { _id: identities.userId },
             ],
         };
-        const user: IAuthDocument = (await AuthModel.findOne(query).exec()) as IAuthDocument;
+        const user = (await AuthModel.findOne(query).exec()) as IAuthDocument | null;
         return user;
     }
     public async addAuthUserToDB(data: IAuthDocument): Promise<void> {

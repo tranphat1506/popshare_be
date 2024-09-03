@@ -29,6 +29,7 @@ class UserServices {
     private aggregateProject() {
         return {
             _id: 1,
+            authId: '$authId._id',
             username: '$authId.username',
             email: '$authId.email',
             createdAt: '$authId.createdAt',

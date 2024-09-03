@@ -21,7 +21,6 @@ export class GetUserController {
             const { userId } = req.currentUser!;
             const userCached = await userCache.getUserFromCache(`${userId}`);
             const user = userCached ?? (await userService.getUserByUserId(`${userId}`));
-
             if (!user) {
                 throw new NotFoundError('Cannot found this user.');
             }
@@ -50,17 +49,17 @@ export class GetUserController {
     public async getByUserId(req: Request, res: Response, next: NextFunction) {
         try {
             const { userId } = req.currentUser!;
-            const { userId: tagetId } = req.params;
-            if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+            const { userId: targetId } = req.params;
+            if (!targetId || !mongoose.Types.ObjectId.isValid(targetId)) {
                 throw new NotFoundError('Cannot found this user.');
             }
-            const friendship = await friendService.getFriendRequestBetweenTwo(`${userId}`, tagetId);
-            const userCached = await userCache.getUserFromCache(`${tagetId}`);
-            let user = userCached ?? (await userService.getUserByUserId(`${tagetId}`));
+            const friendship = await friendCache.checkingPermitBetweenTwoUser(`${userId}`, targetId);
+            const userCached = await userCache.getUserFromCache(`${targetId}`);
+            let user = userCached ?? (await userService.getUserByUserId(`${targetId}`));
             if (!user) {
                 throw new NotFoundError('Cannot found this user.');
             }
-            if (friendship?.status === 'accepted' || tagetId === `${userId}`) {
+            if (friendship === 'accepted') {
                 return res.status(HTTP_STATUS.OK).json({
                     message: 'Successfully get detail user.',
                     user: {
@@ -72,10 +71,10 @@ export class GetUserController {
                         profilePicture: user.profilePicture,
                         createdAt: user.createdAt,
                     } as IUserPublicDetail,
-                    onlineState: await userCache.getUserOnlineState(tagetId),
+                    onlineState: await userCache.getUserOnlineState(targetId),
                 });
             }
-            if (friendship?.status === 'pending') {
+            if (!friendship || friendship === 'pending') {
                 return res.status(HTTP_STATUS.OK).json({
                     message: 'Successfully get detail user.',
                     user: {
@@ -89,6 +88,7 @@ export class GetUserController {
                     } as IUserPublicDetail,
                 });
             }
+            throw new BadRequestError('This user prevent you to fetch data');
         } catch (error) {
             next(error);
         }

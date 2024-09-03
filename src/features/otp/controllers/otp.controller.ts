@@ -17,11 +17,11 @@ export class OTPController {
             if (!encryptedOtp) {
                 throw new BadRequestError('OTP had expired!');
             }
-            const currentOtp = await otpCache.getOtpFromCache(userId);
-            if (!currentOtp) {
+            const otpData = await otpCache.getOtpFromCache(userId);
+            if (!otpData) {
                 throw new BadRequestError('OTP had expired!');
             }
-
+            const { otp: currentOtp } = otpData!;
             const currentEncrypted = crypto.createHash('sha256').update(`${currentOtp.otpNumber}`).digest('hex');
             // Compare two encrypt otp
             if (!(encryptedOtp === currentEncrypted)) {
@@ -59,6 +59,7 @@ export class OTPController {
             // Change otp
             const newOTP = {
                 _id: new Types.ObjectId(),
+                userId: new Types.ObjectId(userId),
                 otpNumber: generateRandomOTP(OTP_MAX_LENGTH),
                 maxOtpLength: OTP_MAX_LENGTH,
                 createdAt: Date.now(),

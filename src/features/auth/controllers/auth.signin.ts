@@ -9,17 +9,15 @@ import { generateToken, verifyToken } from '@root/helpers/jwt.helper';
 import { AuthPayload } from '../interfaces/auth.interfaces';
 import { authCache } from '@service/redis/auth.cache';
 import { MESSAGE_RESPONSE_LIST } from '@root/helpers/error.constants';
-import { generateRandomOTP, sendNewOtpWithUnauthorized, verifyEncryptedOtpToken } from '@root/helpers/otp.v1';
+import { sendNewOtpWithUnauthorized } from '@root/helpers/otp.v1';
 import crypto from 'crypto';
-import { IOTPDocument } from '@root/features/otp/interfaces/otp.interface';
 import { otpCache } from '@root/services/redis/otp.cache';
-import { Types } from 'mongoose';
-import { OTP_MAX_LENGTH } from '@root/features/otp/controllers/otp.controller';
-import { otpQueue } from '@root/services/queues/otp.queue';
 import { userCache } from '@root/services/redis/user.cache';
 import { authQueue } from '@root/services/queues/auth.queue';
+import { joiValidation } from '@root/helpers/decorators/joi.decorators';
+import { regularSignInSchema } from '../schemas/signin';
 export class SignInController {
-    // @joiValidation(regularSigninSchema)
+    @joiValidation(regularSignInSchema)
     public async byIdentityObject(req: Request, res: Response, next: NextFunction) {
         try {
             const { password, rememberDevice, otpToken, ...rest } = req.body;
@@ -42,20 +40,37 @@ export class SignInController {
             if (!authData.isVerify) {
                 if (!otpToken) {
                     await sendNewOtpWithUnauthorized(`${userData._id}`);
-                    throw new NotAuthorizedError(`"user" ${MESSAGE_RESPONSE_LIST.userNotVerify}`);
+                    throw new NotAcceptableError(`"user" ${MESSAGE_RESPONSE_LIST.userNotVerify}`);
                 } else {
-                    const currentOtp = await otpCache.getOtpFromCache(`${userData._id}`);
-                    if (!currentOtp) {
+                    const otpData = await otpCache.getOtpFromCache(`${userData._id}`);
+                    if (!otpData) {
                         await sendNewOtpWithUnauthorized(`${userData._id}`);
-                        throw new NotAuthorizedError(`"user" ${MESSAGE_RESPONSE_LIST.userNotVerify}`);
+                        throw new NotAcceptableError(`"user" ${MESSAGE_RESPONSE_LIST.userNotVerify}`);
                     }
+                    const { otp: currentOtp, handle: handleOtp } = otpData!;
+                    // handle verify data
+                    if (
+                        handleOtp.wrongCount > 10 &&
+                        handleOtp.lastAction &&
+                        Date.now() < handleOtp.lastAction + 3 * 60 * 60 * 1000
+                    ) {
+                        throw new NotAuthorizedError(`"otp" ${MESSAGE_RESPONSE_LIST.otpTooManyRequest}}`);
+                    }
+                    handleOtp.lastAction = Date.now();
                     // verify OTP token on development environment
-                    else if (config.NODE_ENV === 'development') {
+                    if (config.NODE_ENV === 'development') {
                         console.log(currentOtp);
                         // Compare two encrypt otp
-                        if (Number(otpToken) !== currentOtp?.otpNumber) {
+                        if (otpToken !== currentOtp?.otpNumber) {
+                            // If wrong
+                            handleOtp.wrongCount += 1;
+                            await otpCache.updateHandleGetOTP(`${userData._id}`, handleOtp);
                             throw new NotAuthorizedError(`"otp" ${MESSAGE_RESPONSE_LIST.invalidOtp}`);
                         }
+                        // Set new for handle get otp
+                        handleOtp.wrongCount = 0;
+                        handleOtp.lastAction = undefined;
+                        await otpCache.updateHandleGetOTP(`${userData._id}`, handleOtp);
                         // if success, update verify user
                         await userCache.updateUserByUserId(`${userData._id}`, 'isVerify', true);
                         authQueue.singleUpdateAuthDataByAuthId({
@@ -68,8 +83,15 @@ export class SignInController {
                             .digest('hex');
                         // Compare two encrypt otp
                         if (currentEncrypted !== otpToken) {
+                            // If wrong
+                            handleOtp.wrongCount += 1;
+                            await otpCache.updateHandleGetOTP(`${userData._id}`, handleOtp);
                             throw new NotAuthorizedError(`"otp" ${MESSAGE_RESPONSE_LIST.invalidOtp}`);
                         }
+                        // Set new for handle get otp
+                        handleOtp.wrongCount = 0;
+                        handleOtp.lastAction = undefined;
+                        await otpCache.updateHandleGetOTP(`${userData._id}`, handleOtp);
                         // if success, update verify user
                         await userCache.updateUserByUserId(`${userData._id}`, 'isVerify', true);
                         authQueue.singleUpdateAuthDataByAuthId({
@@ -92,6 +114,7 @@ export class SignInController {
                     config.JWT_REFRESH_TOKEN_SECRET,
                     config.JWT_REFRESH_TOKEN_LIFETIME,
                 );
+
                 await authCache.saveRefreshToken(rtoken, `${user._id.toString()}`);
             }
             const userDocument: IUserDocument = {
@@ -116,11 +139,11 @@ export class SignInController {
         try {
             const rtoken = req.body.rtoken;
             const userAgent = req.useragent;
-            console.log(userAgent);
             if (!rtoken) {
                 throw new NotAuthorizedError('Token is invalid. Please login again.');
             }
-            const payload: AuthPayload = (await verifyToken(rtoken, config.JWT_REFRESH_TOKEN_SECRET)) as AuthPayload;
+            const payload = await verifyToken<AuthPayload>(rtoken, config.JWT_REFRESH_TOKEN_SECRET);
+
             // check refresh token is valid
             const isActiveRT = await authCache.checkIsActiveRefreshToken(rtoken, payload.userId);
             if (!isActiveRT) {

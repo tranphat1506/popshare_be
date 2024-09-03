@@ -15,6 +15,7 @@ export const CommonErrorMessageCode = {
     max: 'ERROR_OVER_MAX {{#limit}}',
     empty: 'ERROR_EMPTY',
     email: 'ERROR_INVALID_EMAIL',
+    pattern: 'ERROR_INVALID_PATTERN',
 };
 const regularSignupSchema: ObjectSchema = Joi.object().keys({
     displayName: Joi.string()
@@ -36,6 +37,7 @@ const regularSignupSchema: ObjectSchema = Joi.object().keys({
         .min(MIN_LENGTH_DEFAULT)
         .max(MAX_LENGTH_USERNAME)
         .messages({
+            'string.pattern.base': '{{#label}} ' + CommonErrorMessageCode.pattern,
             'any.required': '{{#label}} ' + CommonErrorMessageCode.required,
             'string.base': '{{#label}} ' + CommonErrorMessageCode.base,
             'string.min': '{{#label}} ' + CommonErrorMessageCode.min,
@@ -47,6 +49,7 @@ const regularSignupSchema: ObjectSchema = Joi.object().keys({
         .required()
         .pattern(Regex.email)
         .messages({
+            'string.pattern.base': '{{#label}} ' + CommonErrorMessageCode.pattern,
             'any.required': '{{#label}} ' + CommonErrorMessageCode.required,
             'string.base': '{{#label}} ' + CommonErrorMessageCode.base,
             'string.email': '{{#label}} ' + CommonErrorMessageCode.email,
@@ -59,6 +62,7 @@ const regularSignupSchema: ObjectSchema = Joi.object().keys({
         .min(MIN_LENGTH_DEFAULT)
         .max(MAX_LENGTH_DEFAULT)
         .messages({
+            'string.pattern.base': '{{#label}} ' + CommonErrorMessageCode.pattern,
             'any.required': '{{#label}} ' + CommonErrorMessageCode.required,
             'string.base': '{{#label}} ' + CommonErrorMessageCode.base,
             'string.min': '{{#label}} ' + CommonErrorMessageCode.min,

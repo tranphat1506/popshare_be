@@ -26,7 +26,7 @@ export interface IAuthDocument extends Document {
     username: string;
     email: string;
     password?: string;
-    createdAt: Date;
+    createdAt: number;
     isVerify: boolean;
     comparePassword(password: string): Promise<boolean>;
     hashPassword(password: string): Promise<string>;
