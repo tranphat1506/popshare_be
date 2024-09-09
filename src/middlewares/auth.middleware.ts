@@ -30,7 +30,7 @@ export class AuthMiddleware {
     public async verifyUserSocketIO(socket: Socket, next: (err?: any) => void) {
         try {
             if (!socket.handshake.headers.authorization) {
-                throw new SocketEventError('auth', 'ERROR_NOT_AUTHORIZATION', { socketId: socket.id });
+                throw new Error('ERROR_NOT_AUTHORIZATION');
             }
             const token = socket.handshake.headers.authorization.split(' ')[1] as string;
             const payload = await verifyToken<AuthPayload>(token, config.JWT_ACCESS_TOKEN_SECRET);
