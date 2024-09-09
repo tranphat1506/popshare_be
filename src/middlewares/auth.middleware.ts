@@ -4,6 +4,7 @@ import { config } from '@root/config';
 import { NotAuthorizedError, SocketEventError } from '@root/helpers/error-handler';
 import { AuthPayload } from '@auth/interfaces/auth.interfaces';
 import { Socket } from 'socket.io';
+import { SocketEventList } from '@root/services/sockets/socketEvent.constant';
 export class AuthMiddleware {
     public async verifyUser(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
@@ -32,16 +33,18 @@ export class AuthMiddleware {
                 throw new SocketEventError('auth', 'ERROR_NOT_AUTHORIZATION', { socketId: socket.id });
             }
             const token = socket.handshake.headers.authorization.split(' ')[1] as string;
-            verifyToken<AuthPayload>(token, config.JWT_ACCESS_TOKEN_SECRET)
-                .then((payload) => {
-                    socket.user = { userId: `${payload.userId}` };
-                })
-                .catch((error) => {
-                    throw new SocketEventError('auth', 'ERROR_NOT_AUTHORIZATION', { socketId: socket.id });
-                });
+            const payload = await verifyToken<AuthPayload>(token, config.JWT_ACCESS_TOKEN_SECRET);
+            socket.user = { userId: `${payload.userId}` };
             next();
         } catch (error) {
-            next(error);
+            socket.emit(
+                SocketEventList.sendSocketRequestError,
+                new SocketEventError('auth', 'ERROR_NOT_AUTHORIZATION', {
+                    socketId: socket.id,
+                    error: error,
+                }).serializeErrors(),
+            );
+            next();
         }
     }
 }
