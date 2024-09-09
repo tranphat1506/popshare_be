@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../helpers/jwt.helper';
 import { config } from '@root/config';
-import { NotAuthorizedError } from '@root/helpers/error-handler';
+import { NotAuthorizedError, SocketEventError } from '@root/helpers/error-handler';
 import { AuthPayload } from '@auth/interfaces/auth.interfaces';
 import { Socket } from 'socket.io';
 export class AuthMiddleware {
@@ -29,11 +29,16 @@ export class AuthMiddleware {
     public async verifyUserSocketIO(socket: Socket, next: (err?: any) => void) {
         try {
             if (!socket.handshake.headers.authorization) {
-                throw new NotAuthorizedError('Invalid credential');
+                throw new SocketEventError('auth', 'ERROR_NOT_AUTHORIZATION', { socketId: socket.id });
             }
             const token = socket.handshake.headers.authorization.split(' ')[1] as string;
-            const payload = await verifyToken<AuthPayload>(token, config.JWT_ACCESS_TOKEN_SECRET);
-            socket.user = { userId: `${payload.userId}` };
+            verifyToken<AuthPayload>(token, config.JWT_ACCESS_TOKEN_SECRET)
+                .then((payload) => {
+                    socket.user = { userId: `${payload.userId}` };
+                })
+                .catch((error) => {
+                    throw new SocketEventError('auth', 'ERROR_NOT_AUTHORIZATION', { socketId: socket.id });
+                });
             next();
         } catch (error) {
             next(error);
