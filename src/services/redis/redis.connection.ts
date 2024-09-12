@@ -4,6 +4,7 @@ import { userCache } from './user.cache';
 import { userService } from '../db/user.services';
 import { RoomModel } from '@root/features/rooms/models/room.schema';
 import { roomCache } from './room.cache';
+import { MessageModel } from '@root/features/rooms/models/message.schema';
 
 class RedisConnection extends BaseCache {
     constructor() {
@@ -23,6 +24,12 @@ class RedisConnection extends BaseCache {
             await Promise.all(
                 allRooms.map(async (room) => {
                     return roomCache.addRoomToCache(room);
+                }),
+            );
+            const allMessages = await MessageModel.find();
+            await Promise.all(
+                allMessages.map(async (message) => {
+                    return roomCache.addMessageToCache(message);
                 }),
             );
             await this.pingToRedis(this.client);
