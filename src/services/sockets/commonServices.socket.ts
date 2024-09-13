@@ -35,7 +35,7 @@ export class CommonSocketServerService {
     public static async joinSocketChatRooms(socket: Socket, roomList: string[]) {
         for await (const roomId of roomList) {
             const { canAction, message } = await roomCache.checkingPermit2ActionByUserId(
-                `${socket.user?.userId}`,
+                `${socket.user!.userId}`,
                 roomId,
                 'socketJoin',
             );

@@ -44,7 +44,7 @@ export class AuthMiddleware {
                     error: error,
                 }).serializeErrors(),
             );
-            next();
+            next(error);
         }
     }
 }

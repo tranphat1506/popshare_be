@@ -133,7 +133,6 @@ class RoomCache extends BaseCache {
             for (const messageId of messageIdList) {
                 const data = await this.getMessageFromCacheByMessageId(messageId);
                 if (!data) continue;
-                console.log(data);
                 messages.push(data);
             }
             return messages.length === 0 ? null : messages;
