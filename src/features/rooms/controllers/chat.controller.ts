@@ -84,7 +84,10 @@ export class ChatController {
                     });
                     // socket
                     socketIORoom.to(`${messageData.roomId}`).emit(SocketEventList.sendMessage, newMessage);
-                    res.status(HTTP_STATUS.OK).json({ message: 'Successfully send a messsage.' });
+                    res.status(HTTP_STATUS.OK).json({
+                        message: 'Successfully send a messsage.',
+                        newMessage: newMessage,
+                    });
                     break;
                 default:
                     throw new BadRequestError('Invalid message type!');
