@@ -55,4 +55,4 @@ export interface IRoomJob {
     value?: IRoomDocument | string;
 }
 
-export type RoomActionTypes = 'socketJoin' | 'kickMember' | 'sendMessage' | 'getMessage';
+export type RoomActionTypes = 'socketJoin' | 'kickMember' | 'sendMessage' | 'getMessage' | 'seen';

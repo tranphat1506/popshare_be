@@ -31,6 +31,10 @@ export interface INotificationDocument extends Document {
     createdAt: number;
 }
 
+export interface ISocketNotificationRoomSetup {
+    friendIdList?: string[];
+}
+
 export interface INotiJob {
     value?: string | INotificationDocument;
 }

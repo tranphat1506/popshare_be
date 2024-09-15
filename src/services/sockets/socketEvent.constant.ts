@@ -4,4 +4,11 @@ export enum SocketEventList {
     broadcastNotification = 'Broadcast',
     onSetupChatRoom = 'SetupChatRoom',
     sendSocketRequestError = 'SocketRequestError',
+    onTyping = 'OnTyping',
+    responseTyping = 'ReponseTyping',
+    sendSeenStatus = 'OnSeenMessage',
+    sendOnlineState = 'SendOnlineState',
+    handleUserLogout = 'handleUserLogout',
+    onSetupNotification = 'SetupNotification',
+    handleUserConnect = 'handleUserConnect',
 }

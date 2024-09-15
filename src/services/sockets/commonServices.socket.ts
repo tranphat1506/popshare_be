@@ -4,6 +4,9 @@ import { IEntity, INotificationDocument } from '@root/features/notifications/int
 import { BadRequestError, SocketEventError } from '@root/helpers/error-handler';
 import { SocketEventList } from './socketEvent.constant';
 import { roomCache } from '../redis/room.cache';
+import { IUpdateMessagePayload } from '@root/features/rooms/interfaces/message.interface';
+import { IOnlineState } from './socket.interfaces';
+import { friendCache } from '../redis/friend.cache';
 export class CommonSocketServerService {
     public static sendNotificationToEntity(noti: INotificationDocument, receiverEntity?: IEntity) {
         const receiver: IEntity = receiverEntity ?? noti.receiver;
@@ -29,6 +32,13 @@ export class CommonSocketServerService {
     public static broadcastToAllUsers(noti: INotificationDocument) {
         socketIONotification.emit(SocketEventList.broadcastNotification, noti);
     }
+    public static async sendOnlineStateToSocketRooms(socket: Socket, onlineState: IOnlineState) {
+        const rooms = Array.from(socket.rooms);
+        rooms.shift();
+        for (const roomId of rooms) {
+            socketIONotification.to(roomId).emit(SocketEventList.sendOnlineState, onlineState);
+        }
+    }
     public static joinSocketChatRoom(socket: Socket, roomId: string) {
         this._joinSocketRoom(socket, roomId);
     }
@@ -42,7 +52,7 @@ export class CommonSocketServerService {
             if (!canAction) {
                 throw new SocketEventError(SocketEventList.onSetupChatRoom, message, null);
             }
-            console.log(`${socket.user?.userId} join ${roomId}`);
+            // console.log(`${socket.user?.userId} join ${roomId}`);
             this._joinSocketRoom(socket, roomId);
         }
     }

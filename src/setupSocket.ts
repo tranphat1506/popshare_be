@@ -5,6 +5,8 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { NotificationSocket } from './services/sockets/notification.socket';
 import { UserSocket } from './services/sockets/user.socket';
 import { RoomSocket } from './services/sockets/room.socket';
+import { ChatRoomSocket } from './services/sockets/chat.socket';
+
 import { authMiddleware } from './middlewares/auth.middleware';
 
 export class SocketIOServer extends LoggerBase {
@@ -33,5 +35,6 @@ export class SocketIOServer extends LoggerBase {
         new NotificationSocket(io).listen();
         new UserSocket(io).listen();
         new RoomSocket(io).listen();
+        new ChatRoomSocket(io).listen();
     }
 }

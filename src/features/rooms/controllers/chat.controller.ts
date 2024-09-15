@@ -5,6 +5,7 @@ import {
     ICreateMessagePayload,
     IReaction,
     IGetMessagePayload,
+    IMarkAsSeenProps,
 } from '../interfaces/message.interface';
 import { BadRequestError } from '@root/helpers/error-handler';
 import { chatQueue } from '@root/services/queues/chat.queue';
@@ -12,6 +13,7 @@ import { Types } from 'mongoose';
 import { roomCache } from '@root/services/redis/room.cache';
 import { socketIORoom } from '@root/services/sockets/room.socket';
 import { SocketEventList } from '@root/services/sockets/socketEvent.constant';
+import { roomService } from '@root/services/db/room.services';
 
 export class ChatController {
     public async getMessagePerPageByRoomId(req: Request, res: Response, next: NextFunction) {
@@ -70,7 +72,7 @@ export class ChatController {
                         messageType: messageData.messageType,
                         content: message,
                         reactions: [] as IReaction[],
-                        seenBy: [] as Types.ObjectId[],
+                        seenBy: [new Types.ObjectId(userId)] as Types.ObjectId[],
                         repliedTo: messageData.repliedTo ? new Types.ObjectId(messageData.repliedTo) : null,
                         createdAt: Date.now(),
                         isEveryoneRecalled: false,
@@ -92,6 +94,41 @@ export class ChatController {
                 default:
                     throw new BadRequestError('Invalid message type!');
             }
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public async markMessageAsSeen(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = `${req.currentUser!.userId}`;
+            const roomId = req.body.roomId;
+            if (!roomId) throw new BadRequestError('Bad request.');
+            const { canAction, message: permitMessage } = await roomCache.checkingPermit2ActionByUserId(
+                userId,
+                `${roomId}`,
+                'getMessage',
+            );
+            if (!canAction) {
+                throw new BadRequestError(permitMessage);
+            }
+            const messagesJustSeen = await roomCache.markMessageAsSeen(userId, {
+                field: 'seenBy',
+                data: userId,
+                roomId: roomId,
+            });
+            if (messagesJustSeen === null) throw new BadRequestError('Bad request.');
+            chatQueue.markMessageAsSeenJob({
+                value: { userId: userId, roomId: roomId, messagesIdList: messagesJustSeen },
+            });
+            socketIORoom.to(roomId).emit(SocketEventList.sendSeenStatus, {
+                userId: userId,
+                roomId: roomId,
+                messagesIdList: messagesJustSeen,
+            } as IMarkAsSeenProps);
+            return res.status(200).json({
+                message: 'Success seen the last message',
+            });
         } catch (error) {
             next(error);
         }

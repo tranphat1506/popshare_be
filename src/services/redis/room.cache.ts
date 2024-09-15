@@ -7,7 +7,11 @@ import {
 } from '@root/features/rooms/interfaces/room.interface';
 import { BaseCache } from './base.cache';
 import { ServerError } from '@root/helpers/error-handler';
-import { IMessageDocument } from '@root/features/rooms/interfaces/message.interface';
+import {
+    IMessageDocument,
+    IMessageFieldSupportUpdate,
+    IUpdateMessagePayload,
+} from '@root/features/rooms/interfaces/message.interface';
 
 class RoomCache extends BaseCache {
     constructor() {
@@ -45,7 +49,12 @@ class RoomCache extends BaseCache {
         }
     }
 
-    public async checkingPermit2ActionByUserId(userId: string, roomId: string, action: RoomActionTypes) {
+    public async checkingPermit2ActionByUserId(
+        userId: string,
+        roomId: string,
+        action: RoomActionTypes,
+        messageId?: string,
+    ) {
         if (!userId || !roomId) return { canAction: false, message: 'Invalid userId or roomId' };
         try {
             const room = await this.client.hget('rooms', `${roomId}`);
@@ -101,6 +110,45 @@ class RoomCache extends BaseCache {
             // danh sach tin nhan
             await this.client.zadd(`message_history:${roomId}`, message.createdAt, `${message._id}`);
             await this.client.hset(`message_data`, `${message._id}`, JSON.stringify(message));
+        } catch (error) {
+            this.log.error(error);
+            throw new ServerError('Server error. Try again.');
+        }
+    }
+
+    public async markMessageAsSeen(userId: string, data: IUpdateMessagePayload<'seenBy'>) {
+        try {
+            if (!data.roomId) return null;
+            // Lấy từ mới nhất tới cũ, rồi tìm đến phần tử chưa seens
+            const messageIdList = await this.client.zrevrange(`message_history:${data.roomId}`, 0, -1, 'WITHSCORES');
+            if (messageIdList.length === 0) return null;
+            const messagesId: string[] = [];
+            for (const messageId of messageIdList) {
+                const message = await this.getMessageFromCacheByMessageId(messageId);
+                if (!message) continue;
+                if ((message.seenBy as string[]).includes(`${userId}`)) break;
+                const updateMessage = { ...message, seenBy: [...message.seenBy, userId] };
+                await this.client.hset(`message_data`, `${updateMessage._id}`, JSON.stringify(updateMessage));
+                messagesId.push(`${updateMessage._id}`);
+            }
+            return messagesId;
+        } catch (error) {
+            this.log.error(error);
+            throw new ServerError('Server error. Try again.');
+        }
+    }
+
+    public async updateMessage<Field extends keyof IMessageDocument>(
+        messageId: string,
+        field: Field,
+        data: IMessageDocument[Field],
+    ) {
+        try {
+            const stringData = await this.client.hget(`message_data`, `${messageId}`);
+            if (!stringData) return null;
+            const message = JSON.parse(stringData) as IMessageDocument;
+            const updateMessage = { ...message, [field]: data };
+            await this.client.hset(`message_data`, `${updateMessage._id}`, JSON.stringify(updateMessage));
         } catch (error) {
             this.log.error(error);
             throw new ServerError('Server error. Try again.');

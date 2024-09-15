@@ -40,7 +40,39 @@ export interface IGetMessagePayload {
     page?: number;
     totalGet?: number;
 }
+export interface IMessageFieldSupportUpdate {
+    reactions: IReaction;
+    seenBy: Types.ObjectId | string;
+    isEveryoneRecalled: boolean;
+    isSelfRecalled: boolean;
+}
 
+export const EnumMessageFieldSupportUpdate: (keyof IMessageFieldSupportUpdate)[] = [
+    'isEveryoneRecalled',
+    'isSelfRecalled',
+    'reactions',
+    'seenBy',
+];
+export interface IUpdateMessagePayload<K extends keyof IMessageFieldSupportUpdate> {
+    roomId?: string;
+    field?: K | keyof IMessageFieldSupportUpdate;
+    data?: IMessageFieldSupportUpdate[K];
+}
+
+export interface IOnTypingPayload {
+    roomId?: string;
+    typeTyping?: IMessageTypeTypes | 'stop';
+}
+export interface IResponseOnTyping {
+    roomId: string;
+    typeTyping: IMessageTypeTypes | 'stop';
+    userId: string;
+}
+export interface IMarkAsSeenProps {
+    userId: string;
+    roomId: string;
+    messagesIdList: string[];
+}
 export interface IChatJob {
-    value?: IMessageDocument;
+    value?: IMessageDocument | IMarkAsSeenProps;
 }

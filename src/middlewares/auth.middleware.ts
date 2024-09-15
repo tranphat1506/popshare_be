@@ -5,6 +5,8 @@ import { NotAuthorizedError, SocketEventError } from '@root/helpers/error-handle
 import { AuthPayload } from '@auth/interfaces/auth.interfaces';
 import { Socket } from 'socket.io';
 import { SocketEventList } from '@root/services/sockets/socketEvent.constant';
+import { userCache } from '@root/services/redis/user.cache';
+import { CommonSocketServerService } from '@root/services/sockets/commonServices.socket';
 export class AuthMiddleware {
     public async verifyUser(req: Request, _res: Response, next: NextFunction): Promise<void> {
         try {
@@ -14,6 +16,7 @@ export class AuthMiddleware {
             }
             const payload: AuthPayload = (await verifyToken(token, config.JWT_ACCESS_TOKEN_SECRET)) as AuthPayload;
             req.currentUser = payload;
+            await userCache.addUserToOnlineState(`${payload.userId}`);
             next();
         } catch (error) {
             next(new NotAuthorizedError('Token is invalid. Please login again.'));

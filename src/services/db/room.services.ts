@@ -1,9 +1,10 @@
+import { config } from '@root/config';
 import { IMessageDocument } from '@root/features/rooms/interfaces/message.interface';
 import { IMemberDetail, IRoomDocument } from '@root/features/rooms/interfaces/room.interface';
 import { MessageModel } from '@root/features/rooms/models/message.schema';
 import { RoomModel } from '@root/features/rooms/models/room.schema';
 import { Types } from 'mongoose';
-
+const logger = config.createLogger('RoomServices');
 class RoomServices {
     public async addRoomUserToDB(data: IRoomDocument): Promise<void> {
         await RoomModel.create(data);
@@ -18,6 +19,25 @@ class RoomServices {
             _id: roomId,
             'roomMembers.list': { $elemMatch: { memberId: new Types.ObjectId(userId) } },
         });
+    }
+
+    public async markAsSeenByMessagesIdList(userId: string, roomId: string, messagesIdList: string[]): Promise<void> {
+        const result = await MessageModel.updateMany(
+            {
+                roomId: roomId,
+                seenBy: { $nin: [userId] },
+                _id: { $in: messagesIdList },
+            },
+            {
+                $addToSet: { seenBy: userId },
+            },
+        );
+        if (result.modifiedCount !== messagesIdList.length) {
+            logger.error(
+                `MARK AS SEEN BY MESSAGES ID LIST WAS UPDATE NOT COMPLETE::${result.modifiedCount}/${messagesIdList.length}`,
+            );
+        }
+        return;
     }
 
     public async getAllRoomByMemberId(userId: string): Promise<IRoomDocument[]> {

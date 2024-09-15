@@ -10,6 +10,7 @@ class ChatRoutes {
     public routes(): Router {
         this.router.post('/getPerPage', ChatController.prototype.getMessagePerPageByRoomId);
         this.router.post('/send', ChatController.prototype.sendMessageToChatRoom);
+        this.router.post('/markAsSeen', ChatController.prototype.markMessageAsSeen);
         return this.router;
     }
 }

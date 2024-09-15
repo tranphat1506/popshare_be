@@ -53,13 +53,19 @@ export class GetUserController {
             if (!targetId || !mongoose.Types.ObjectId.isValid(targetId)) {
                 throw new NotFoundError('Cannot found this user.');
             }
-            const friendship = await friendCache.checkingPermitBetweenTwoUser(`${userId}`, targetId);
+            const friendshipRedis = await friendCache.getFriendRequestFromCache(`${userId}`, targetId);
+            const friendship =
+                friendshipRedis ?? (await friendService.getFriendRequestBetweenTwo(`${userId}`, targetId));
             const userCached = await userCache.getUserFromCache(`${targetId}`);
             let user = userCached ?? (await userService.getUserByUserId(`${targetId}`));
             if (!user) {
                 throw new NotFoundError('Cannot found this user.');
             }
-            if (friendship === 'accepted') {
+            // saved to redis
+            if (friendship && !friendshipRedis) {
+                friendCache.addFriendRequestToCache(friendship);
+            }
+            if (friendship?.status === 'accepted') {
                 return res.status(HTTP_STATUS.OK).json({
                     message: 'Successfully get detail user.',
                     user: {
@@ -70,11 +76,11 @@ export class GetUserController {
                         displayName: user.displayName,
                         profilePicture: user.profilePicture,
                         createdAt: user.createdAt,
+                        onlineState: await userCache.getUserOnlineState(targetId),
                     } as IUserPublicDetail,
-                    onlineState: await userCache.getUserOnlineState(targetId),
                 });
             }
-            if (!friendship || friendship === 'pending') {
+            if (!friendship || friendship?.status === 'pending') {
                 return res.status(HTTP_STATUS.OK).json({
                     message: 'Successfully get detail user.',
                     user: {

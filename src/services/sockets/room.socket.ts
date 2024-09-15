@@ -14,7 +14,6 @@ export class RoomSocket extends BaseSocket {
     public listen(): void {
         this.io.on('connection', (socket: Socket) => {
             socket.on(SocketEventList.onSetupChatRoom, async (data: ISocketChatRoomSetup) => {
-                console.log(data);
                 const currentSocketEvent = SocketEventList.onSetupChatRoom;
                 try {
                     const rooms = data.roomIdList;
