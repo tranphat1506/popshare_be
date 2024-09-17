@@ -124,6 +124,11 @@ export class ChatController {
                 roomId: roomId,
             });
             if (messagesJustSeen === null) throw new BadRequestError('Bad request.');
+            if (messagesJustSeen.length === 0) {
+                return res.status(200).json({
+                    message: 'Success seen the last message',
+                });
+            }
             chatQueue.markMessageAsSeenJob({
                 value: { userId: userId, roomId: roomId, messagesIdList: messagesJustSeen },
             });
@@ -132,6 +137,8 @@ export class ChatController {
                 roomId: roomId,
                 messagesIdList: messagesJustSeen,
             } as IMarkAsSeenProps);
+            console.log(messagesJustSeen);
+
             return res.status(200).json({
                 message: 'Success seen the last message',
             });
