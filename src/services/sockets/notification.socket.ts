@@ -30,7 +30,11 @@ export class NotificationSocket extends BaseSocket {
 
             // when user online
             socket.on(SocketEventList.handleUserConnect, async () => {
-                await this.handleConnect(socket);
+                try {
+                    await this.handleConnect(socket);
+                } catch (error) {
+                    this.catchError(error, socket);
+                }
             });
             socket.on('disconnect', () => {});
         });

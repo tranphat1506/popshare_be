@@ -30,7 +30,7 @@ export class ChatRoomSocket extends BaseSocket {
                         userId: `${socket.user?.userId}`,
                     } as IResponseOnTyping);
                 } catch (error) {
-                    throw new SocketEventError(currentSocketEvent, 'Error while update message', data);
+                    this.catchError(error, socket);
                 }
             });
             socket.on('disconnect', () => {});
