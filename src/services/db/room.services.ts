@@ -21,7 +21,23 @@ class RoomServices {
         });
     }
 
-    public async markAsSeenByMessagesIdList(userId: string, roomId: string, messagesIdList: string[]): Promise<void> {
+    public async markAsSeenByMessagesIdList(
+        userId: string,
+        roomId: string,
+        messagesIdList: string[] | null,
+    ): Promise<void> {
+        if (messagesIdList === null) {
+            const result = await MessageModel.updateMany(
+                {
+                    roomId: roomId,
+                    seenBy: { $nin: [userId] },
+                },
+                {
+                    $addToSet: { seenBy: userId },
+                },
+            );
+            return;
+        }
         const result = await MessageModel.updateMany(
             {
                 roomId: roomId,

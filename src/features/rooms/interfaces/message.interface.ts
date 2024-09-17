@@ -71,7 +71,7 @@ export interface IResponseOnTyping {
 export interface IMarkAsSeenProps {
     userId: string;
     roomId: string;
-    messagesIdList: string[];
+    messagesIdList: string[] | null;
 }
 export interface IChatJob {
     value?: IMessageDocument | IMarkAsSeenProps;

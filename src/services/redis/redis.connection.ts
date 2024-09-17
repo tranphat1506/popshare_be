@@ -29,7 +29,7 @@ class RedisConnection extends BaseCache {
             const allMessages = await MessageModel.find();
             await Promise.all(
                 allMessages.map(async (message) => {
-                    return roomCache.addMessageToCache(message);
+                    return await roomCache.addMessageToCache(message);
                 }),
             );
             await this.pingToRedis(this.client);

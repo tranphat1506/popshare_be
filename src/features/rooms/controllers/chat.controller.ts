@@ -109,6 +109,7 @@ export class ChatController {
         try {
             const userId = `${req.currentUser!.userId}`;
             const roomId = req.body.roomId;
+            const notRead = req.body.notRead;
             if (!roomId) throw new BadRequestError('Bad request.');
             const { canAction, message: permitMessage } = await roomCache.checkingPermit2ActionByUserId(
                 userId,
@@ -125,12 +126,17 @@ export class ChatController {
             });
             if (messagesJustSeen === null) throw new BadRequestError('Bad request.');
             if (messagesJustSeen.length === 0) {
+                if (notRead) {
+                    chatQueue.markMessageAsSeenJob({
+                        value: { userId: userId, roomId: roomId, messagesIdList: null },
+                    });
+                }
                 return res.status(200).json({
                     message: 'Success seen the last message',
                 });
             }
             chatQueue.markMessageAsSeenJob({
-                value: { userId: userId, roomId: roomId, messagesIdList: messagesJustSeen },
+                value: { userId: userId, roomId: roomId, messagesIdList: null },
             });
             socketIORoom.to(roomId).emit(SocketEventList.sendSeenStatus, {
                 userId: userId,
