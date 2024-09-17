@@ -47,7 +47,11 @@ export class ChatController {
     public async sendMessageToChatRoom(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = `${req.currentUser!.userId}`;
-            const messageData: ICreateMessagePayload = { ...req.body, senderId: userId };
+            const payload = req.body;
+            if (!payload.socketId || !payload.message) {
+                throw new BadRequestError('Bad request.');
+            }
+            const messageData: ICreateMessagePayload = { ...req.body.message, senderId: userId };
             let newMessage: IMessageDocument;
             if (!messageData.roomId || !messageData.messageType) {
                 throw new BadRequestError('Bad request.');
@@ -85,7 +89,9 @@ export class ChatController {
                         value: newMessage,
                     });
                     // socket
-                    socketIORoom.to(`${messageData.roomId}`).emit(SocketEventList.sendMessage, newMessage);
+                    socketIORoom
+                        .to(`${messageData.roomId}`)
+                        .emit(SocketEventList.sendMessage, { message: newMessage, socketId: payload.socketId });
                     res.status(HTTP_STATUS.OK).json({
                         message: 'Successfully send a messsage.',
                         newMessage: newMessage,
