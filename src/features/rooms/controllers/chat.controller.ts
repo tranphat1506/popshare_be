@@ -83,6 +83,7 @@ export class ChatController {
                         isSelfRecalled: false,
                     } as IMessageDocument;
                     // add to cache
+
                     await roomCache.addMessageToCache(newMessage);
                     // add to db
                     chatQueue.addMesesageJob({
