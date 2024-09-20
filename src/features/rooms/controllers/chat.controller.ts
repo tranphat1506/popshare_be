@@ -6,6 +6,7 @@ import {
     IReaction,
     IGetMessagePayload,
     IMarkAsSeenProps,
+    ISendMessagePayload,
 } from '../interfaces/message.interface';
 import { BadRequestError } from '@root/helpers/error-handler';
 import { chatQueue } from '@root/services/queues/chat.queue';
@@ -47,60 +48,67 @@ export class ChatController {
     public async sendMessageToChatRoom(req: Request, res: Response, next: NextFunction) {
         try {
             const userId = `${req.currentUser!.userId}`;
-            const payload = req.body;
-            if (!payload.socketId || !payload.message) {
+            const payload = req.body as ISendMessagePayload;
+            if (!payload.socketId || !payload.messages) {
                 throw new BadRequestError('Bad request.');
             }
-            const messageData: ICreateMessagePayload = { ...req.body.message, senderId: userId };
-            let newMessage: IMessageDocument;
-            if (!messageData.roomId || !messageData.messageType) {
-                throw new BadRequestError('Bad request.');
-            }
-            switch (messageData.messageType) {
-                case 'text':
-                    const message = messageData.content?.trim();
-                    const { canAction, message: permitMessage } = await roomCache.checkingPermit2ActionByUserId(
-                        userId,
-                        `${messageData.roomId}`,
-                        'sendMessage',
-                    );
-                    // No message content
-                    // checking permission
-                    if (!message || !canAction) {
-                        throw new BadRequestError(!message ? 'Bad request.' : permitMessage);
-                    }
-                    newMessage = {
-                        _id: new Types.ObjectId(),
-                        roomId: new Types.ObjectId(messageData.roomId),
-                        senderId: new Types.ObjectId(messageData.senderId),
-                        messageType: messageData.messageType,
-                        content: message,
-                        reactions: [] as IReaction[],
-                        seenBy: [new Types.ObjectId(userId)] as Types.ObjectId[],
-                        repliedTo: messageData.repliedTo ? new Types.ObjectId(messageData.repliedTo) : null,
-                        createdAt: Date.now(),
-                        isEveryoneRecalled: false,
-                        isSelfRecalled: false,
-                    } as IMessageDocument;
-                    // add to cache
+            const messagesData: ICreateMessagePayload[] = payload.messages;
+            const createdMessages: (IMessageDocument & { tempId: string })[] = [];
+            for (const data of messagesData) {
+                let newMessage: IMessageDocument;
+                const messageData: ICreateMessagePayload = { ...data, senderId: userId };
+                if (!messageData.roomId || !messageData.messageType) {
+                    throw new BadRequestError('Bad request.');
+                }
+                switch (messageData.messageType) {
+                    case 'text':
+                        const message = messageData.content?.trim();
+                        const { canAction, message: permitMessage } = await roomCache.checkingPermit2ActionByUserId(
+                            userId,
+                            `${messageData.roomId}`,
+                            'sendMessage',
+                        );
+                        // No message content
+                        // checking permission
+                        if (!message || !canAction) {
+                            throw new BadRequestError(!message ? 'Bad request.' : permitMessage);
+                        }
+                        newMessage = {
+                            _id: new Types.ObjectId(),
+                            roomId: new Types.ObjectId(messageData.roomId),
+                            senderId: new Types.ObjectId(messageData.senderId),
+                            messageType: messageData.messageType,
+                            content: message,
+                            reactions: [] as IReaction[],
+                            seenBy: [new Types.ObjectId(userId)] as Types.ObjectId[],
+                            repliedTo: messageData.repliedTo ? new Types.ObjectId(messageData.repliedTo) : null,
+                            createdAt: Date.now(),
+                            isEveryoneRecalled: false,
+                            isSelfRecalled: false,
+                        } as IMessageDocument;
+                        // add to cache
 
-                    await roomCache.addMessageToCache(newMessage);
-                    // add to db
-                    chatQueue.addMesesageJob({
-                        value: newMessage,
-                    });
-                    // socket
-                    socketIORoom
-                        .to(`${messageData.roomId}`)
-                        .emit(SocketEventList.sendMessage, { message: newMessage, socketId: payload.socketId });
-                    res.status(HTTP_STATUS.OK).json({
-                        message: 'Successfully send a messsage.',
-                        newMessage: newMessage,
-                    });
-                    break;
-                default:
-                    throw new BadRequestError('Invalid message type!');
+                        await roomCache.addMessageToCache(newMessage);
+                        // add to db
+                        chatQueue.addMesesageJob({
+                            value: newMessage,
+                        });
+                        createdMessages.push({ ...newMessage, tempId: messageData.tempId } as IMessageDocument & {
+                            tempId: string;
+                        });
+                        break;
+                    default:
+                        throw new BadRequestError('Invalid message type!');
+                }
             }
+            // socket
+            socketIORoom
+                .to(`${payload.roomId}`)
+                .emit(SocketEventList.sendMessage, { messages: createdMessages, socketId: payload.socketId });
+            return res.status(HTTP_STATUS.OK).json({
+                message: 'Successfully send a messsage.',
+                messages: createdMessages,
+            });
         } catch (error) {
             next(error);
         }

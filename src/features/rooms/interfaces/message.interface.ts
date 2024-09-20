@@ -27,13 +27,19 @@ export interface IMessageDocument extends Document {
     isSelfRecalled: boolean; // Nếu người gửi đã thu hồi tin nhắn
 }
 
+export interface ISendMessagePayload {
+    roomId?: string;
+    messages?: ICreateMessagePayload[];
+    socketId?: string;
+}
 export interface ICreateMessagePayload {
     senderId: string;
-    messageType?: IMessageTypeTypes;
     roomId?: string;
+    messageType?: IMessageTypeTypes;
     content?: string;
     mediaUrl?: string;
     repliedTo?: Types.ObjectId | string; // ID của tin nhắn mà tin nhắn này đang trả lời
+    tempId: string;
 }
 export interface IGetMessagePayload {
     roomId?: string;
