@@ -126,7 +126,7 @@ class RoomCache extends BaseCache {
             for (const messageId of messageIdList) {
                 const message = await this.getMessageFromCacheByMessageId(messageId);
                 if (!message) continue;
-                if ((message.seenBy as string[]).includes(`${userId}`)) break;
+                // if ((message.seenBy as string[]).includes(`${userId}`)) break;
                 const updateMessage = { ...message, seenBy: [...message.seenBy, userId] };
                 await this.client.hset(`message_data`, `${updateMessage._id}`, JSON.stringify(updateMessage));
                 messagesId.push(`${updateMessage._id}`);
