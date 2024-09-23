@@ -147,7 +147,7 @@ export class SignInController {
             // check refresh token is valid
             const isActiveRT = await authCache.checkIsActiveRefreshToken(rtoken, payload.userId);
             if (!isActiveRT) {
-                throw new NotAuthorizedError('Token is invalid. Please login again.');
+                throw new NotAcceptableError('This refresh token was expired.');
             }
 
             const aToken = await generateToken(
