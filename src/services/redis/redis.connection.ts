@@ -9,6 +9,7 @@ import { MessageModel } from '@root/features/rooms/models/message.schema';
 class RedisConnection extends BaseCache {
     constructor() {
         super('redisConnection');
+        this.cacheOnEventListener(this.client);
     }
     public async connect(): Promise<void> {
         try {
