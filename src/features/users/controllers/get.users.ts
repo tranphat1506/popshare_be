@@ -78,6 +78,7 @@ export class GetUserController {
                         createdAt: user.createdAt,
                         onlineState: await userCache.getUserOnlineState(targetId),
                     } as IUserPublicDetail,
+                    friendship: friendship,
                 });
             }
             if (!friendship || friendship?.status === 'pending') {
@@ -92,6 +93,7 @@ export class GetUserController {
                         profilePicture: user.profilePicture,
                         createdAt: user.createdAt,
                     } as IUserPublicDetail,
+                    friendship: friendship ?? undefined,
                 });
             }
             throw new BadRequestError('This user prevent you to fetch data');
