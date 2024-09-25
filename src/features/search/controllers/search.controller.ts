@@ -3,7 +3,7 @@ import { userService } from '@root/services/db/user.services';
 import { NextFunction, Request, Response } from 'express';
 import HTTP_STATUS from 'http-status-codes';
 
-export class ChatController {
+export class SearchController {
     public async searchByText(req: Request, res: Response, next: NextFunction) {
         try {
             const searchText = req.body.text;
