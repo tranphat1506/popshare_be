@@ -26,6 +26,13 @@ class UserServices {
         return users.length === 0 ? null : users[0];
     }
 
+    async searchUserByKeyWord(keyword: string, limit: number = 10): Promise<IUserDocument[]> {
+        const regex = new RegExp(keyword, 'i'); // 'i' makes it case-insensitive
+        return await UserModel.find({
+            $or: [{ username: { $regex: regex } }, { displayName: { $regex: regex } }],
+        }).limit(limit); // Limits the results to 10 users
+    }
+
     private aggregateProject() {
         return {
             _id: 1,
