@@ -12,6 +12,7 @@ import { roomQueue } from '@root/services/queues/room.queue';
 import { INotificationDocument } from '@root/features/notifications/interfaces/notifications.interface';
 import { notiQueue } from '@root/services/queues/notification.queue';
 import { CommonSocketServerService } from '@root/services/sockets/commonServices.socket';
+import { roomService } from '@root/services/db/room.services';
 export class FriendMethodController {
     public async addFriendMethod(req: Request, res: Response, next: NextFunction) {
         const { userId } = req.body;
@@ -46,7 +47,7 @@ export class FriendMethodController {
                         userId: new Types.ObjectId(`${userId}`),
                     },
                     notificationType: 'friend_request',
-                    notificationMessages: ['%SENDER% has sent %RECEIVER% a friend request'],
+                    notificationMessages: ['%SENDER% SENT_FRIEND_REQUEST'],
                     notificationReaders: [
                         {
                             entityType: 'user',
@@ -97,33 +98,29 @@ export class FriendMethodController {
                     // else save to cached
                     await friendCache.addFriendRequestToCache(newRequest);
                 }
-                const newRoom = {
+                const existChatRoom = await roomService.getP2PRoomBetweenTwoUser(userId, `${req.currentUser!.userId}`);
+
+                const newNoti = {
                     _id: new Types.ObjectId(),
-                    roomType: 'p2p',
+                    sender: {
+                        entityType: 'user',
+                        userId: new Types.ObjectId(`${req.currentUser!.userId}`),
+                    },
+                    receiver: {
+                        entityType: 'user',
+                        userId: new Types.ObjectId(`${userId}`),
+                    },
+                    notificationType: 'friend_request',
+                    notificationMessages: ['%SENDER% ACCEPTED_FRIEND_REQUEST'],
+                    notificationReaders: [
+                        {
+                            entityType: 'user',
+                            userId: new Types.ObjectId(`${req.currentUser!.userId}`),
+                        },
+                    ],
                     createdAt: Date.now(),
-                    createdBy: new Types.ObjectId(`${req.currentUser!.userId}`),
-                    roomMembers: {
-                        member: 2,
-                        list: [
-                            {
-                                memberId: new Types.ObjectId(`${req.currentUser!.userId}`),
-                                position: 'owner',
-                                permissionScore: 9999,
-                            },
-                            {
-                                memberId: new Types.ObjectId(`${userId}`),
-                                position: 'owner',
-                                permissionScore: 9999,
-                            },
-                        ],
-                    },
-                    roomBannedList: {
-                        member: 0,
-                        list: [] as IMemberDetail[],
-                    },
-                } as IRoomDocument;
-                await roomCache.addRoomToCache(newRoom);
-                roomQueue.addRoomJob({ value: newRoom });
+                } as INotificationDocument;
+                notiQueue.addNotiToDB({ value: newNoti });
                 friendQueue.updateFriendRequest({
                     key1: `${req.currentUser!.userId}`,
                     key2: `${userId}`,
@@ -132,12 +129,43 @@ export class FriendMethodController {
                         responseTime: Date.now(),
                     } as IUpdateFriendRequest,
                 });
+                CommonSocketServerService.sendNotificationToEntity(newNoti);
+                if (!existChatRoom) {
+                    const newRoom = {
+                        _id: new Types.ObjectId(),
+                        roomType: 'p2p',
+                        createdAt: Date.now(),
+                        createdBy: new Types.ObjectId(`${req.currentUser!.userId}`),
+                        roomMembers: {
+                            member: 2,
+                            list: [
+                                {
+                                    memberId: new Types.ObjectId(`${req.currentUser!.userId}`),
+                                    position: 'owner',
+                                    permissionScore: 9999,
+                                },
+                                {
+                                    memberId: new Types.ObjectId(`${userId}`),
+                                    position: 'owner',
+                                    permissionScore: 9999,
+                                },
+                            ],
+                        },
+                        roomBannedList: {
+                            member: 0,
+                            list: [] as IMemberDetail[],
+                        },
+                    } as IRoomDocument;
+                    await roomCache.addRoomToCache(newRoom);
+                    roomQueue.addRoomJob({ value: newRoom });
+                    CommonSocketServerService.sendMessageOnJoinNewChatRoom(newRoom);
+                }
                 return res
                     .status(HTTP_STATUS.OK)
                     .json({ message: 'Successfully send add friend request to this user.', friendRequest: newRequest });
             }
             // u already sent the request, please wait
-            return res.status(HTTP_STATUS.BAD_REQUEST).json({
+            return res.status(HTTP_STATUS.OK).json({
                 message: 'You already sent the request to this user.',
                 friendRequest: friendRequest,
             });
@@ -157,9 +185,8 @@ export class FriendMethodController {
             const friendRequestCached = await friendCache.getFriendRequestFromCache(`${senderId}`, receiverId);
             const friendRequest =
                 friendRequestCached ?? (await friendService.getFriendRequestBetweenTwo(`${senderId}`, receiverId));
-
             // If dont have the request
-            if (friendRequest === null || friendRequest.status === 'pending') {
+            if (friendRequest === null) {
                 return res.status(HTTP_STATUS.OK).json({ message: 'Successfully unfriend this user.' });
             }
             // remove friend to redis if exist

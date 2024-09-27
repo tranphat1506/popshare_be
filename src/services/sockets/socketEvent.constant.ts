@@ -11,4 +11,5 @@ export enum SocketEventList {
     handleUserLogout = 'handleUserLogout',
     onSetupNotification = 'SetupNotification',
     handleUserConnect = 'handleUserConnect',
+    onJoinNewChatRoom = 'OnJoinNewChatRoom',
 }

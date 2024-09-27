@@ -1,3 +1,4 @@
+import { SearchUserResult } from '@root/features/search/interfaces/search.interface';
 import { IUserDocument } from '@root/features/users/interfaces/user.interface';
 import { UserModel } from '@root/features/users/models/user.schema';
 import mongoose from 'mongoose';
@@ -26,11 +27,21 @@ class UserServices {
         return users.length === 0 ? null : users[0];
     }
 
-    async searchUserByKeyWord(keyword: string, limit: number = 10): Promise<IUserDocument[]> {
+    async searchUserByKeyword(keyword: string, limit: number = 10): Promise<SearchUserResult[]> {
         const regex = new RegExp(keyword, 'i'); // 'i' makes it case-insensitive
-        return await UserModel.find({
-            $or: [{ username: { $regex: regex } }, { displayName: { $regex: regex } }],
-        }).limit(limit); // Limits the results to 10 users
+        return await UserModel.aggregate([
+            {
+                $limit: limit, // Limits the result set to 10 users
+            },
+            { $lookup: { from: 'Auth', localField: 'authId', foreignField: '_id', as: 'authData' } },
+            { $unwind: '$authData' },
+            {
+                $match: {
+                    $or: [{ 'authData.username': { $regex: regex } }, { displayName: { $regex: regex } }],
+                },
+            },
+            { $project: this.aggregateSearchProject() },
+        ]);
     }
 
     private aggregateProject() {
@@ -44,6 +55,17 @@ class UserServices {
             displayName: 1,
             notifications: 1,
             privacies: 1,
+            profilePicture: 1,
+            avatarEmoji: 1,
+            avatarColor: 1,
+        };
+    }
+
+    private aggregateSearchProject() {
+        return {
+            _id: 1,
+            username: '$authData.username',
+            displayName: 1,
             profilePicture: 1,
             avatarEmoji: 1,
             avatarColor: 1,

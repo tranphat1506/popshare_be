@@ -67,4 +67,24 @@ export class GetFriendController {
             next(error);
         }
     }
+
+    public async getFriendRequestByUserId(req: Request, res: Response, next: NextFunction) {
+        const userId = req.body.userId;
+        const currentUserId = `${req.currentUser!.userId}`;
+        try {
+            const friendCached = await friendCache.getFriendRequestFromCache(userId, currentUserId);
+            const friendship = friendCached ?? (await friendService.getFriendRequestBetweenTwo(userId, currentUserId));
+            // saved to redis
+            if (friendship && !friendCached) {
+                friendCache.addFriendRequestToCache(friendship);
+            }
+            console.log(friendship);
+            return res.status(HTTP_STATUS.OK).json({
+                message: 'Success get friendship between two users',
+                friendship: friendship ?? undefined,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

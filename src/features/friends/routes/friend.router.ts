@@ -10,6 +10,7 @@ class FriendRoutes {
 
     public routes(): Router {
         this.router.post('/all', GetFriendController.prototype.all);
+        this.router.post('/getByUserId', GetFriendController.prototype.getFriendRequestByUserId);
         this.router.post('/filter/:status', GetFriendController.prototype.byStatusFilter);
         this.router.post('/add', FriendMethodController.prototype.addFriendMethod);
         this.router.post('/un', FriendMethodController.prototype.unFriendMethod);

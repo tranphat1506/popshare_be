@@ -32,7 +32,7 @@ export interface INotificationDocument extends Document {
 }
 
 export interface ISocketNotificationRoomSetup {
-    friendIdList?: string[];
+    userId?: string;
 }
 
 export interface INotiJob {

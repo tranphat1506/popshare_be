@@ -4,13 +4,13 @@ import { IEntity, INotificationDocument } from '@root/features/notifications/int
 import { BadRequestError, SocketEventError } from '@root/helpers/error-handler';
 import { SocketEventList } from './socketEvent.constant';
 import { roomCache } from '../redis/room.cache';
-import { IUpdateMessagePayload } from '@root/features/rooms/interfaces/message.interface';
 import { IOnlineState } from './socket.interfaces';
-import { friendCache } from '../redis/friend.cache';
+import { socketIOChatRoom } from './chat.socket';
+import { IRoomDocument } from '@root/features/rooms/interfaces/room.interface';
 export class CommonSocketServerService {
     public static sendNotificationToEntity(noti: INotificationDocument, receiverEntity?: IEntity) {
         const receiver: IEntity = receiverEntity ?? noti.receiver;
-        const toReceiver: string = `${receiver.userId}` || `${receiver.roomId}`;
+        const toReceiver: string = receiver.userId ? `${receiver.userId}` : `${receiver.roomId}`;
         switch (noti.notificationType) {
             case 'friend_request':
             case 'message':
@@ -57,6 +57,13 @@ export class CommonSocketServerService {
         }
     }
     private static _joinSocketRoom(socket: Socket, roomId: string) {
+        console.log('JOIN', roomId);
         socket.join(roomId);
+    }
+
+    public static sendMessageOnJoinNewChatRoom(room: IRoomDocument) {
+        socketIOChatRoom
+            .to(room.roomMembers.list.map((roomData) => `${roomData.memberId}`))
+            .emit(SocketEventList.onJoinNewChatRoom, room);
     }
 }

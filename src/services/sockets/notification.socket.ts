@@ -15,14 +15,12 @@ export class NotificationSocket extends BaseSocket {
 
     public listen() {
         this.io.on('connection', (socket: Socket) => {
-            socket.on(SocketEventList.onSetupNotification, async (data: ISocketNotificationRoomSetup) => {
+            socket.on(SocketEventList.onSetupNotification, async () => {
                 const currentSocketEvent = SocketEventList.onSetupNotification;
                 try {
-                    const friends = data.friendIdList;
-                    if (!friends) throw new SocketEventError(currentSocketEvent, 'Invalid data.', data);
-                    for (const friend of friends) {
-                        CommonSocketServerService.joinSocketNotificationRoom(socket, friend);
-                    }
+                    const userId = socket.user?.userId;
+                    if (!userId) throw new SocketEventError(currentSocketEvent, 'Invalid data.', { userId });
+                    CommonSocketServerService.joinSocketNotificationRoom(socket, userId);
                 } catch (error) {
                     this.catchError(error, socket);
                 }

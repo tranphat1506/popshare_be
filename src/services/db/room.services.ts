@@ -62,6 +62,18 @@ class RoomServices {
         });
     }
 
+    public async getP2PRoomBetweenTwoUser(userId1: string, userId2: string): Promise<IRoomDocument | null> {
+        return await RoomModel.findOne({
+            roomType: 'p2p',
+            'roomMembers.list': {
+                $all: [
+                    { $elemMatch: { memberId: new Types.ObjectId(userId1) } },
+                    { $elemMatch: { memberId: new Types.ObjectId(userId2) } },
+                ],
+            },
+        });
+    }
+
     public async getMessagesByPage(
         chatRoomId: Types.ObjectId | string,
         page: number,
