@@ -9,6 +9,7 @@ import { authMiddleware } from './middlewares/auth.middleware';
 import { roomRoutes } from './features/rooms/routes/room.router';
 import { chatRoutes } from './features/rooms/routes/chat.router';
 import { otpRouter } from './features/otp/routes/otp.router';
+import { searchRoutes } from './features/search/routes/search.router';
 const BASE_PATH = `/api/${config.APP_VERSION}`;
 
 export default (app: Application) => {
@@ -24,6 +25,7 @@ export default (app: Application) => {
         app.use(BASE_PATH + '/friend', authMiddleware.verifyUser, friendRoutes.routes());
         app.use(BASE_PATH + '/room', authMiddleware.verifyUser, roomRoutes.routes());
         app.use(BASE_PATH + '/chat', authMiddleware.verifyUser, chatRoutes.routes());
+        app.use(BASE_PATH + '/search', authMiddleware.verifyUser, searchRoutes.routes());
 
         app.post(BASE_PATH, (req, res) => {
             return res.sendStatus(200);
